@@ -54,15 +54,14 @@
 //   );
 // }
 import React, { useState } from "react";
-import { StatusBar, Text, View } from "react-native";
-import Navbar from "../Component/NavBar"; // Import the Navbar component
-import SideBar from "../Component/SideBar"; // Import the SideBar component
+import { StatusBar } from "react-native";
 import "../global.css";
+import Login from './Login';
 export default function App() {
    const [sidebarVisible, setSidebarVisible] = useState(false);
   return (
     <>
-      <View className="flex-1 bg-gray-100 h-full">
+      {/* <View className="flex-1 bg-gray-100 h-full">
       <Navbar 
         onMenuPress={() => setSidebarVisible(true)}
         userName="Mohamed Alaoui"
@@ -74,12 +73,13 @@ export default function App() {
         userName="Mohamed Alaoui"
         userEmail="m.alaoui@example.com"
       />
-      <View className="flex-1 items-center justify-center">
+      <ScrollView className="flex-1 ">
         <Text className="text-gray-600 text-lg">Contenu de la page</Text>
-      </View> 
-        </View>
-       <StatusBar  backgroundColor="white" barStyle={"dark-content"} />
-    {/* <Login></Login> */}
+      </ScrollView> 
+      <BottomBar></BottomBar>
+        </View> */}
+       <StatusBar  backgroundColor="#b0396b" barStyle={"light-content"} />
+    <Login></Login>
     </>
     
   );

@@ -1,7 +1,7 @@
 import { Image } from "expo-image";
 import { useState } from "react";
 import { Alert, Pressable, Text, TextInput, View } from "react-native";
-
+import Logo from '../assets/images/logo.png';
 export default function Login() {
   const [name, setName] = useState("");
   const [cin, setCin] = useState("");
@@ -68,16 +68,14 @@ export default function Login() {
   };
 
   return (
-    <View className="flex-1 items-center bg-[#b0396b] pt-20">
+    <View className="flex-1 items-center justify-center bg-[#b0396b] pt-2">
       <Image
-        // source={require("../assets/images/allogo.png")}
-         source={{ uri: "https://picsum.photos/200" }}
-        className="w-32 h-32"
-        contentFit="contain"
-        cachePolicy="memory"
+        source={Logo}
+          style={{ width: 240, height: 240 }}
+          resizeMode="contain"
       />
 
-      <View className="gap-3 mb-10 items-center justify-center">
+      <View className="gap-3 mb-10 mt-4 items-center justify-center">
         <Text className="text-white text-3xl font-bold">Connexion</Text>
         <Text className="text-white text-sm text-center px-4">
           Entrez vos identifiants pour accéder à votre compte
