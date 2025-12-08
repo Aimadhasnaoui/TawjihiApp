@@ -5,13 +5,15 @@ import {
 } from 'react-native';
 import Logo from '../assets/images/logo.png';
 // NavBar Component
+import { useAuthStore } from '@/app/Store/authStore';
 import { Avatar } from 'react-native-paper';
+export default function NavBar () {
+  const user =  useAuthStore.getState().userAccepted;
 
-export default function NavBar ({userName = "Utilisateur" }) {
   return (
     <View    
-      style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center'}}
-      className="bg-[#b0396b] px-4 py-3 shadow-lg"
+      style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',backgroundColor:'#b0396b'}}
+      className="bg-black px-4 py-3 shadow-lg"
     >
       <Pressable 
         // onPress={onMenuPress}
@@ -24,7 +26,7 @@ export default function NavBar ({userName = "Utilisateur" }) {
         />
       </Pressable>
       
-      <Avatar.Text size={32} label="XD" />
+      <Avatar.Text size={32} label={user.user.Prenom[0].toUpperCase()} />
     </View>
   );
 };

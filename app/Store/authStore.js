@@ -31,9 +31,19 @@ export const useAuthStore = create(
     (set) => ({
       isLogin: false,
       isCompleted: false,
+       userAccepted: null, // 👈 add your custom stored value
 
-      login: () => set({ isLogin: true }),
-      logout: () => set({ isLogin: false }),
+        login: (userAccepted) =>
+        set({
+          isLogin: true,
+          userAccepted: userAccepted, // 👈 stored automatically in SecureStore / localStorage
+        }),
+
+      logout: () =>
+        set({
+          isLogin: false,
+          userAccepted: null, // optional: clear it
+        }),
 
       markDossierIncomplete: () => set({ isCompleted: false }),
       markDossierCompleted: () => set({ isCompleted: true }),
