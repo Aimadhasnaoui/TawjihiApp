@@ -1,13 +1,14 @@
 import { Tabs } from "expo-router";
 import { Bell, FileText, Home, MessageCircle, User } from 'lucide-react-native';
 import { StatusBar } from "react-native";
+import NavBar from '../../Component/NavBar';
 export default function TabsLayout() {
 
   return (
     <>
       <StatusBar backgroundColor="#b0396b" barStyle="light-content" />
+      <NavBar></NavBar>
       <Tabs
-      
       screenOptions={{ headerShown: false,
         tabBarActiveTintColor:'#b0396b'
        }} >

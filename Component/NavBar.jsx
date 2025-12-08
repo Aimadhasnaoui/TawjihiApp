@@ -7,14 +7,14 @@ import Logo from '../assets/images/logo.png';
 // NavBar Component
 import { Avatar } from 'react-native-paper';
 
-export default function NavBar ({ onMenuPress, userName = "Utilisateur" }) {
+export default function NavBar ({userName = "Utilisateur" }) {
   return (
     <View    
       style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center'}}
       className="bg-[#b0396b] px-4 py-3 shadow-lg"
     >
       <Pressable 
-        onPress={onMenuPress}
+        // onPress={onMenuPress}
         className="p-2 active:opacity-70"
       >
         <Image
