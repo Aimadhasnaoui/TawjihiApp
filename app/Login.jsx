@@ -164,7 +164,6 @@ import { useRef, useState } from "react";
 import {
   Keyboard,
   KeyboardAvoidingView,
-  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -239,7 +238,10 @@ export default function Login() {
   };
 
   return (
-    <View className="flex-1">
+    <KeyboardAvoidingView
+    keyboardVerticalOffset={100}
+        behavior="padding"
+        className="flex-1">
       {/* Video Background */}
       <Video
         ref={video}
@@ -257,9 +259,7 @@ export default function Login() {
       {/* Dark Overlay for better readability */}
       <View style={StyleSheet.absoluteFill} className="bg-black/40" />
 
-      <KeyboardAvoidingView
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
-        className="flex-1"
+      <View
       >
         <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
           <ScrollView
@@ -331,7 +331,7 @@ export default function Login() {
             </View>
           </ScrollView>
         </TouchableWithoutFeedback>
-      </KeyboardAvoidingView>
     </View>
+      </KeyboardAvoidingView>
   );
 }
