@@ -1,11 +1,15 @@
 // app/(tabs)/index.tsx
-import { Text, View } from "react-native";
-
+import { ScrollView } from "react-native";
+import EcoleInfo from '../../Component/Home/EcoleInfo';
+import ExamanCount from '../../Component/Home/ExamanCount';
+import Welcom from '../../Component/Home/Welcom';
 export default function HomeScreen() {
   console.log("Tabs index rendered");
   return (
-    <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
-      <Text>Welcome in Tabs 🎉</Text>
-    </View>
+    <ScrollView style={{ flex: 1}}>
+      <Welcom></Welcom>
+      <ExamanCount></ExamanCount>
+      <EcoleInfo></EcoleInfo>
+    </ScrollView>
   );
 }

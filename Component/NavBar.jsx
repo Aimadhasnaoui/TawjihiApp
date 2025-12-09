@@ -13,7 +13,7 @@ export default function NavBar () {
   return (
     <View    
       style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',backgroundColor:'#b0396b'}}
-      className="bg-black px-4 py-3 shadow-lg"
+      className=" px-4 py-3 shadow-lg"
     >
       <Pressable 
         // onPress={onMenuPress}
