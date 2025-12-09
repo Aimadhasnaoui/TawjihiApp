@@ -26,7 +26,7 @@ export default function NavBar () {
         />
       </Pressable>
       
-      <Avatar.Text size={32} label={user.user.Prenom[0].toUpperCase()} />
+      <Avatar.Text size={32} label={user ?user.user.Prenom[0].toUpperCase() : 'U'} />
     </View>
   );
 };

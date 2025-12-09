@@ -1,74 +1,64 @@
-
+import { Feather } from "@expo/vector-icons";
 import { useQuery } from "@tanstack/react-query";
-import { ScrollView, Text, View } from "react-native";
+import { LinearGradient } from "expo-linear-gradient";
+import { AlertTriangle, Bell, CheckCircle, Info } from "lucide-react-native";
+import { useEffect, useRef } from "react";
+import {
+  Animated,
+  Pressable,
+  RefreshControl,
+  ScrollView,
+  Text,
+  View,
+} from "react-native";
 import { GetAnnonce } from "../../services/Annonce";
-
-// export default function Annonce() {
-//   const {
-//     data,
-//     isLoading,
-//     error,
-//     refetch,
-//   } = useQuery({
-//     queryKey: ["annonce"],
-//     queryFn: GetAnnonce,
-//   });
-
-//   return (
-//     <View style={{ flex: 1, padding: 16, alignItems: "center", justifyContent: "center", gap: 10 }}>
-//       <Text style={{ fontSize: 20, fontWeight: "bold", marginBottom: 8 }}>Annonce 🎉</Text>
-
-//       {isLoading && <Text>Loading…</Text>}
-
-//       {error && (
-//         <Text style={{ color: "red", textAlign: "center" }}>
-//           Error: {error.message}
-//         </Text>
-//       )}
-
-//       {data && (
-//         <ScrollView style={{ maxHeight: 250, width: "100%", marginTop: 8 }}>
-//           <Text selectable style={{ textAlign: "center" }}>
-//             {JSON.stringify(data, null, 2)}
-//           </Text>
-//         </ScrollView>
-//       )}
-
-//       <Button title="Reload" onPress={refetch} />
-//     </View>
-//   );
-// }
-// import { useQuery } from "@tantml/react-query";
-// import { GetAnnonce } from "../../services/Annonce";
-import { Feather } from '@expo/vector-icons';
-import { Pressable, RefreshControl } from "react-native";
-
 export default function Annonce() {
-  const {
-    data,
-    isLoading,
-    error,
-    refetch,
-    isRefetching,
-  } = useQuery({
+  const { data, isLoading, error, refetch, isRefetching } = useQuery({
     queryKey: ["annonce"],
     queryFn: GetAnnonce,
   });
 
-  const getTypeConfig = (type) => {
-    switch (type) {
-      case 'info':
-        return { icon: 'info', bg: '#3B82F6', lightBg: '#DBEAFE' };
-      case 'warning':
-        return { icon: 'alert-triangle', bg: '#F59E0B', lightBg: '#FEF3C7' };
-      case 'success':
-        return { icon: 'check-circle', bg: '#10B981', lightBg: '#D1FAE5' };
-      case 'urgent':
-        return { icon: 'alert-circle', bg: '#EF4444', lightBg: '#FEE2E2' };
-      default:
-        return { icon: 'bell', bg: '#6B7280', lightBg: '#F3F4F6' };
-    }
+  const typeConfig = {
+    info: {
+      icon: Info,
+      colors: ["#b0396b", "#8b2f5a"], // primary to secondary
+      badge: "bg-primary/10 text-primary",
+    },
+    warning: {
+      icon: AlertTriangle,
+      colors: ["#f59e0b", "#f97316"], // amber to orange
+      badge: "bg-amber-500/10 text-amber-600",
+    },
+    news: {
+      icon: CheckCircle,
+      colors: ["#10b981", "#14b8a6"], // emerald to teal
+      badge: "bg-emerald-500/10 text-emerald-600",
+    },
+    deadlines: {
+      icon: Bell,
+      colors: ["#ef4444", "#f43f5e"], // red to rose
+      badge: "bg-red-500/10 text-red-600",
+    },
   };
+
+  const pulseAnim = useRef(new Animated.Value(1)).current;
+
+  useEffect(() => {
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(pulseAnim, {
+          toValue: 1.5,
+          duration: 1000,
+          useNativeDriver: true,
+        }),
+        Animated.timing(pulseAnim, {
+          toValue: 1,
+          duration: 1000,
+          useNativeDriver: true,
+        }),
+      ])
+    ).start();
+  }, []);
 
   return (
     <View className="flex-1 bg-gray-50">
@@ -88,7 +78,7 @@ export default function Annonce() {
             refreshing={isRefetching}
             onRefresh={refetch}
             tintColor="#b0396b"
-            colors={['#b0396b']}
+            colors={["#b0396b"]}
           />
         }
       >
@@ -141,48 +131,74 @@ export default function Annonce() {
         {data && data.length > 0 && (
           <View className="gap-4">
             {data.map((annonce, index) => {
-              const config = getTypeConfig(annonce.Type);
+              // const config = getTypeConfig(annonce.Type);
+              const config = typeConfig[annonce.Type];
+              const Icon = config.icon;
               return (
-                <View
+                <Pressable
                   key={annonce._id}
                   className="bg-white rounded-2xl shadow-sm overflow-hidden"
-                  style={{
-                    shadowColor: '#000',
-                    shadowOffset: { width: 0, height: 2 },
-                    shadowOpacity: 0.1,
-                    shadowRadius: 8,
-                    elevation: 3,
-                  }}
                 >
-                  {/* Color Bar */}
-                  <View
-                    className="h-1.5"
-                    style={{ backgroundColor: config.bg }}
-                  />
-
-                  <View className="p-5">
+                  <View className="">
                     {/* Header */}
-                    <View className="flex-row items-start mb-3">
-                      <View
-                        className="w-10 h-10 rounded-full items-center justify-center mr-3"
-                        style={{ backgroundColor: config.lightBg }}
-                      >
-                        <Feather name={config.icon} size={20} color={config.bg} />
+                    <View className="flex-row items-start mb-3 w-full h-32 relative">
+                      {annonce.Image ? (
+                        <Image
+                          src={annonce.Image || "/placeholder.svg"}
+                          className="h-full w-full object-cover"
+                        />
+                      ) : (
+                        <LinearGradient
+                          colors={config.colors}
+                          start={{ x: 0, y: 0 }}
+                          end={{ x: 1, y: 1 }}
+                          className="h-full w-full flex items-center justify-center"
+                        >
+                          <View
+                            className={`h-full w-full bg-gradient-to-br ${config.gradient} flex items-center justify-center`}
+                          >
+                            <View className="relative">
+                              <Animated.View
+                                style={{
+                                  position: "absolute",
+                                  opacity: 0.2,
+                                  transform: [{ scale: pulseAnim }],
+                                }}
+                              >
+                                <Icon size={64} color="white" />
+                              </Animated.View>
+
+                              {/* Main icon */}
+                              <Icon size={64} color="white" />
+                            </View>
+                          </View>
+                        </LinearGradient>
+                      )}
+                      <View className="absolute top-3 right-3">
+                        <Text
+                          className={`flex-row  items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium backdrop-blur-sm bg-white/90 text-foreground shadow-sm`}
+                        >
+                          <Icon className="h-3.5 w-3.5" />
+                          {annonce.Type.charAt(0).toUpperCase() +
+                            annonce.Type.slice(1)}
+                        </Text>
                       </View>
-                      <View className="flex-1">
+                    </View>
+                    <View className=" items-start mb-3 p-5 gap-3">
+                      <View className="flex-1 gap-3">
                         <Text className="text-gray-900 text-lg font-bold leading-6">
                           {annonce.Titre}
                         </Text>
+                        <Text className="text-gray-600 text-[12px]">
+                          {annonce.Description}
+                        </Text>
+                      </View>
+                      <View className="flex-1 flex-row items-center justify-between mt-3 w-full">
                         <Text className="text-gray-400 text-xs mt-1 uppercase tracking-wide">
                           {annonce.Type}
                         </Text>
                       </View>
                     </View>
-
-                    {/* Description */}
-                    <Text className="text-gray-600 text-base leading-6 ml-13">
-                      {annonce.Description}
-                    </Text>
 
                     {/* Footer */}
                     {annonce.Image && (
@@ -193,7 +209,7 @@ export default function Annonce() {
                       </View>
                     )}
                   </View>
-                </View>
+                </Pressable>
               );
             })}
           </View>

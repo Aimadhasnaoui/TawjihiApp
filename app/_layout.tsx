@@ -9,10 +9,10 @@ const queryClient = new QueryClient();
   return (
      <QueryClientProvider client={queryClient}>
   <Stack  screenOptions={{ headerShown: false }} >
-  <Stack.Protected guard={isLogin}>
+  <Stack.Protected guard={!isLogin}>
         <Stack.Screen name="tabs" />
       </Stack.Protected>
-    <Stack.Protected guard={!isLogin}>
+    <Stack.Protected guard={isLogin}>
     <Stack.Screen name="Login" />
     </Stack.Protected>
       
