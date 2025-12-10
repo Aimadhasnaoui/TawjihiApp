@@ -35,7 +35,7 @@ export default function EcoleInfo() {
       </View>
       <View className="" style={{backgroundColor:"#f8f5f8",marginBottom:10,gap:3,borderRadius:10,padding:10}}  >
         <View className="flex-row gap-[4px] items-center" style={{gap:3}}>
-          <CheckCircle2 size={20} color="#58277f" />
+          <CheckCircle2 size={20} color="#5CE65C" />
           <Text className="font-sm" style={{color:"#69606b"}}>Choisies</Text>
         </View>
         <Text className="font-bold text-3xl mt-2">12</Text>

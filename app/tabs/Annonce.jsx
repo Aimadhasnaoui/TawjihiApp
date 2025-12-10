@@ -8,6 +8,7 @@ import {
   Pressable,
   RefreshControl,
   ScrollView,
+  StyleSheet,
   Text,
   View,
 } from "react-native";
@@ -63,7 +64,7 @@ export default function Annonce() {
   return (
     <View className="flex-1 bg-gray-50">
       {/* Header */}
-      <View className="bg-[#b0396b] pt-2 pb-6 px-6 shadow-lg">
+      <View className="bg-[#b0396b] pt-2 pb-6 px-6 shadow-lg" style={styles.Gardient}>
         <Text className="text-white text-3xl font-bold">Annonces</Text>
         <Text className="text-white/80 text-sm mt-1">
           Restez informé des dernières actualités
@@ -227,3 +228,11 @@ export default function Annonce() {
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  Gardient:{
+       padding: 20,
+    borderBottomLeftRadius: 24,
+    borderBottomRightRadius: 24,
+  }
+})
