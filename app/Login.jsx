@@ -10,18 +10,17 @@ import {
   Text,
   TextInput,
   TouchableWithoutFeedback,
-  View
+  View,
 } from "react-native";
-import Logo from '../assets/images/logo.png';
+import Logo from "../assets/images/logo.png";
 import { LoginStudent } from "../services/Login";
-import { useAuthStore } from './Store/authStore';
 export default function Login() {
-  const {login} = useAuthStore()
   const video = useRef(null);
 
   const [name, setName] = useState("");
-  const [cin, setCin] = useState("");
   const [errors, setErrors] = useState({ name: "", cin: "" });
+  const [cin, setCin] = useState("");
+  const [isloading, setisloading] = useState(false);
   const [focusedInput, setFocusedInput] = useState(null);
 
   const validateName = (value) => {
@@ -59,16 +58,19 @@ export default function Login() {
         cin_eleve: cin.trim().toUpperCase(),
       };
       // console.log("Sending data:", userData);
- LoginStudent(userData)
-  .then((res) => {
-    console.log( "response");
-    console.log(res);
-    login(res)
-  })
-  .catch((err) => {
-    console.log(err);
-     console.log("MESSAGE:", err.message);
-  });
+      setisloading(true);
+      LoginStudent(userData)
+        .then((res) => {
+          console.log("response");
+          console.log(res);
+          LoginUser(res);
+          setisloading(false);
+        })
+        .catch((err) => {
+          console.log(err);
+          console.log("MESSAGE:", err.message);
+          setisloading(false);
+        });
 
       // login()
     }
@@ -90,14 +92,15 @@ export default function Login() {
 
   return (
     <KeyboardAvoidingView
-    keyboardVerticalOffset={50}
-        behavior="padding"
-        className="flex-1 justify-center items-center">
+      keyboardVerticalOffset={50}
+      behavior="padding"
+      className="flex-1 justify-center items-center"
+    >
       {/* Video Background */}
       <Video
         ref={video}
         style={StyleSheet.absoluteFill}
-        source={require('../assets/Back.mp4')} // Your video file
+        source={require("../assets/Back.mp4")} // Your video file
         // OR use remote video:
         // source={{ uri: 'https://example.com/video.mp4' }}
         resizeMode={ResizeMode.COVER}
@@ -110,8 +113,7 @@ export default function Login() {
       {/* Dark Overlay for better readability */}
       <View style={StyleSheet.absoluteFill} className="bg-[#b0396b]/10" />
 
-      <View
-      >
+      <View>
         <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
           <ScrollView
             contentContainerStyle={{ flexGrow: 1 }}
@@ -147,7 +149,9 @@ export default function Login() {
                   autoCapitalize="words"
                 />
                 {errors.name ? (
-                  <Text className="text-red-200 text-xs mt-1 ml-1">{errors.name}</Text>
+                  <Text className="text-red-200 text-xs mt-1 ml-1">
+                    {errors.name}
+                  </Text>
                 ) : null}
               </View>
 
@@ -167,7 +171,9 @@ export default function Login() {
                   maxLength={9}
                 />
                 {errors.cin ? (
-                  <Text className="text-red-200 text-xs mt-1 ml-1">{errors.cin}</Text>
+                  <Text className="text-red-200 text-xs mt-1 ml-1">
+                    {errors.cin}
+                  </Text>
                 ) : null}
               </View>
 
@@ -175,14 +181,20 @@ export default function Login() {
                 onPress={handleSubmit}
                 className="bg-white w-[80%] px-6 py-3 rounded-xl active:opacity-80"
               >
-                <Text className="text-center text-[#b0396b] font-semibold text-base">
-                  Se connecter
-                </Text>
+                {!isloading ? (
+                  <Text className="text-center text-[#b0396b] font-semibold text-base">
+                    Se connecter
+                  </Text>
+                ) : (
+                  <Text className="text-center text-[#b0396b] font-semibold text-base">
+                    ...Loading
+                  </Text>
+                )}
               </Pressable>
             </View>
           </ScrollView>
         </TouchableWithoutFeedback>
-    </View>
-      </KeyboardAvoidingView>
+      </View>
+    </KeyboardAvoidingView>
   );
 }

@@ -42,7 +42,13 @@ export default {
           },
         },
       ],
-      "expo-secure-store",
+      [
+        "expo-secure-store",
+        {
+            "configureAndroidBackup": true,
+            "faceIDPermission": "Allow $(PRODUCT_NAME) to access your Face ID biometric data."
+          }
+      ]
     ],
     experiments: {
       typedRoutes: true,

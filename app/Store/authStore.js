@@ -1,58 +1,20 @@
-import * as SecureStore from "expo-secure-store";
-import { Platform } from "react-native";
-import { create } from "zustand";
-import { createJSONStorage, persist } from "zustand/middleware";
+import * as SecureStore from 'expo-secure-store';
 
-const webStorage = {
-  getItem: async (name) =>
-    typeof window !== "undefined" ? window.localStorage.getItem(name) : null,
+export async function LoginUser(value) {
+  console.log(value)
+  await SecureStore.setItemAsync('UserTawjihi', value);
+}
 
-  setItem: async (name, value) => {
-    if (typeof window !== "undefined") {
-      window.localStorage.setItem(name, value);
-    }
-  },
+export async function GetUser(key) {
+  let result = await SecureStore.getItemAsync('UserTawjihi');
+  return result;
+  }
 
-  removeItem: async (name) => {
-    if (typeof window !== "undefined") {
-      window.localStorage.removeItem(name);
-    }
-  },
-};
-
-const secureStorage = {
-  getItem: SecureStore.getItemAsync,
-  setItem: SecureStore.setItemAsync,
-  removeItem: SecureStore.deleteItemAsync,
-};
-
-export const useAuthStore = create(
-  persist(
-    (set) => ({
-      isLogin: false,
-      isCompleted: false,
-       userAccepted: null, // 👈 add your custom stored value
-
-        login: (userAccepted) =>
-        set({
-          isLogin: true,
-          userAccepted: userAccepted, // 👈 stored automatically in SecureStore / localStorage
-        }),
-
-      logout: () =>
-        set({
-          isLogin: false,
-          userAccepted: null, // optional: clear it
-        }),
-
-      markDossierIncomplete: () => set({ isCompleted: false }),
-      markDossierCompleted: () => set({ isCompleted: true }),
-    }),
-    {
-      name: "auth-storage",
-      storage: createJSONStorage(() =>
-        Platform.OS === "web" ? webStorage : secureStorage
-      ),
-    }
-  )
-);
+export async function CheckUser(key) {
+  let result = await SecureStore.getItemAsync('UserTawjihi');
+  if(result){
+    return true;
+  }else{
+    return false;
+  }
+  }

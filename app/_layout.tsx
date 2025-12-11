@@ -1,9 +1,9 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Stack } from "expo-router";
 import "../global.css";
-import { useAuthStore } from './Store/authStore';
+import { CheckUser } from "./Store/authStore";
 export default function RootLayout() {
-  const {isLogin} = useAuthStore();
+ const isLogin = CheckUser();
   const iscomplete = false;
 const queryClient = new QueryClient();
   return (
