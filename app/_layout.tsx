@@ -4,13 +4,16 @@ import "../global.css";
 import { useAuthStore } from './Store/authStore';
 export default function RootLayout() {
   const {isLogin} = useAuthStore();
-
+  const iscomplete = false;
 const queryClient = new QueryClient();
   return (
      <QueryClientProvider client={queryClient}>
   <Stack  screenOptions={{ headerShown: false }} >
-  <Stack.Protected guard={!isLogin}>
+  <Stack.Protected guard={!isLogin && iscomplete}>
         <Stack.Screen name="tabs" />
+      </Stack.Protected>
+  <Stack.Protected guard={!isLogin && !iscomplete}>
+        <Stack.Screen name="RegisterPage" />
       </Stack.Protected>
     <Stack.Protected guard={isLogin}>
     <Stack.Screen name="Login" />

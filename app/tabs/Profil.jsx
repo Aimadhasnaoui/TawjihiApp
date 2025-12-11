@@ -1,94 +1,14 @@
-// import { Camera, User } from "lucide-react-native";
-// import {
-//   Image,
-//   StyleSheet,
-//   Text,
-//   View
-// } from "react-native";
-// import { useAuthStore } from '../Store/authStore';
-// export default function Profil(){
-
-// const {logout} = useAuthStore()
-// const user =  {
-//         "infos_personnelles": {
-//             "prenom_fr": "aimad",
-//             "nom_fr": "hasnaoui",
-//             "prenom_ar": "هدف",
-//             "nom_ar": "حسناوي",
-//             "date_naissance": "2003-02-08T00:00:00.000Z",
-//             "lieu_naissance": "agadir",
-//             "cin_eleve": "K235535"
-//         },
-//         "_id": "692ed3cabae6ab08c3f71e8e",
-//         "Image": null,
-//         "isAllInfo": false,
-//         "createdAt": "2025-12-02T11:55:54.490Z",
-//         "updatedAt": "2025-12-02T11:55:54.490Z",
-//         "__v": 0
-//     }
-//     return (
-//        <View style={{ flex: 1}}>
-//         <View className="bg-[#b0396b]   px-6 shadow-lg text-centre  items-center justify-center" style={styles.Gardient}>
-//                 <Text className="text-white text-3xl font-bold">Mon Profil</Text>
-//               </View>
-//                 <View className="flex-row justify-center -mt-16 relative z-10">
-//         <View style={styles.moveit}>
-//           {user.Image ? (
-//             <Image
-//               src={user.Image || "/placeholder.svg"}
-//               alt="Profile"
-//               className="w-28 h-28 rounded-full border-4 border-card object-cover shadow-lg"
-//             />
-//           ) : (
-//             <View style={styles.UserIcon} className="rounded-full border-2 border-black flex-row items-center justify-center">
-//               <User className="w-12 h-12 text-[#58277f]" color='#58277f' />
-//             </View>
-//           )}
-//           <View className="absolute rounded-full  flex items-center justify-center  border-2 border-white" style={styles.cameraIcon}>
-//             <Camera  color={'#ffffffff'} />
-//           </View>
-//           <View>
-//             <Text className='font-bold text-2xl'>aimad hasnaoui</Text>
-//           </View>
-//           <View>
-//             <Text className='font-bold text-2xl'>عماد حسناوي</Text>
-//           </View>
-//         </View>
-//       </View>
-//     </View>
-//     )
-// }
-// const styles = StyleSheet.create({
-//   Gardient:{
-//        paddingBottom: 40,
-//     borderBottomLeftRadius: 24,
-//     borderBottomRightRadius: 24,
-//   },
-//   moveit:{
-//     position:'relative',
-//     top:-30
-//   },
-//   UserIcon:{
-//     width: 80,
-//     height: 80,
-//     backgroundColor:"#b0396ba3",
-//     borderColor:"#ffffffff"
-//   },
-//   cameraIcon:{
-//     width: 30,
-//     height: 30,
-//     backgroundColor:"#b0396bff",
-//     borderColor:"#ffffffff",
-//   },
-// })
 import {
+  AlertTriangle,
   CalendarDays,
   Camera,
   IdCard,
+  LogOut,
   MapPin,
-  User
+  User,
+  Edit3
 } from "lucide-react-native";
-import { Image, StyleSheet, Text, View } from "react-native";
+import {  Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { useAuthStore } from "../Store/authStore";
 
 export default function Profil() {
@@ -173,12 +93,34 @@ export default function Profil() {
         <Text style={styles.nameFr}>{fullNameFr}</Text>
         <Text style={styles.nameAr}>{fullNameAr}</Text>
       </View>
-      <View style={{ padding:4}}>
+      <ScrollView  contentContainerStyle={{ paddingVertical: 16, paddingHorizontal: 8}}>
                 {/* SECTION TITLE */}
           <Text style={styles.sectionTitle}>
             INFORMATIONS PERSONNELLES
           </Text>
-
+ {!user.isAllInfo && (
+            <View style={styles.alertCard}>
+              <View style={styles.alertCardText}>
+                  <View style={styles.alertIconCircle}>
+                <AlertTriangle size={22} color="#c27803" />
+              </View>
+                 <View>
+                <Text style={styles.alertTitle}>Profil incomplet</Text>
+              </View>
+              </View>
+                 <View>
+                <Text style={styles.alertSubtitle}>
+                  Veuillez compléter vos informations personnelles pour
+                  finaliser votre inscription.
+                </Text>
+              </View>
+                 <TouchableOpacity style={styles.alertButton}>
+                <Text style={styles.alertButtonText}>
+                  Compléter maintenant
+                </Text>
+              </TouchableOpacity> 
+            </View>
+          )}
           {/* INFO CARDS */}
           <View style={{ gap: 12 ,padding:4}}>
             {/* Date de naissance */}
@@ -218,7 +160,56 @@ export default function Profil() {
               </View>
             </View>
           </View>
+          <Text style={styles.sectionTitle}>
+            Paramètres
+          </Text>
+            <View style={{ gap: 4 ,padding:4}}>
+            {/* Date de naissance */}
+            <TouchableOpacity style={styles.settingsButton}>
+  <View style={styles.editIconWrapper}>
+    <Edit3 size={22} color="#58277f" />
+  </View>
+
+  <Text style={styles.settingsText}>Mettre à jour votre profil</Text>
+
+  {/* Optional arrow → looks clean */}
+  <View style={styles.arrowIcon}>
+    <Edit3 size={20} color="#58277f" />
+  </View>
+</TouchableOpacity>
+
+<TouchableOpacity style={styles.settingsButton}>
+  <View style={styles.logoutIconWrapper}>
+    <LogOut size={22} color="#DC0000" />
+  </View>
+
+  <Text style={styles.settingsText}>Logout</Text>
+
+  {/* Optional arrow */}
+  <View style={styles.arrowIcon}>
+    <LogOut size={20} color="#DC0000" />
+  </View>
+</TouchableOpacity>
+
+            {/* <TouchableOpacity style={styles.infoCardParametr}>
+              <View style={styles.infoIconCircleEdit}>
+                <Edit3 size={22} color="#b0396b" />
+              </View>
+              <View style={styles.infoTextWrapper}>
+                <Text style={styles.infoValue}>Mettre à jour votre profil</Text>
+              </View>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.infoCardParametr}>
+              <View style={styles.infoIconCircleLougout}>
+                <LogOut  size={22} color="#DC0000" />
+              </View>
+              <View style={styles.infoTextWrapper}>
+                <Text style={styles.infoValue}>Logout</Text>
+              </View>
+            </TouchableOpacity> */}
+
           </View>
+          </ScrollView>
     </View>
   );
 }
@@ -301,7 +292,7 @@ const styles = StyleSheet.create({
 
   // Alert banner
   alertCard: {
-    flexDirection: "row",
+    // flexDirection: "row",
     backgroundColor: "#fff8e6",
     borderRadius: 16,
     padding: 16,
@@ -309,6 +300,10 @@ const styles = StyleSheet.create({
     borderColor: "#ffd48a",
     alignItems: "flex-start",
     gap: 12,
+  },
+  alertCardText: {
+    flexDirection: "row",
+    gap: 6,
   },
   alertIconCircle: {
     width: 32,
@@ -370,6 +365,19 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     elevation: 2,
   },
+  infoCardParametr: {
+    flexDirection: "row",
+    backgroundColor: "white",
+    borderRadius: 16,
+    padding: 16,
+    alignItems: "center",
+    // light shadow
+    shadowColor: "#000",
+    shadowOpacity: 0.05,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 2,
+  },
   infoIconCircle: {
     width: 40,
     height: 40,
@@ -378,6 +386,24 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     marginRight: 12,
+  },
+  infoIconCircleLougout: {
+    width: 40,
+    height: 40,
+    borderRadius: 999,
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: 12,
+    backgroundColor: "rgba(255, 56, 56, 0.2)",
+  },
+  infoIconCircleEdit: {
+    width: 40,
+    height: 40,
+    borderRadius: 999,
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: 12,
+    backgroundColor: "rgba(88, 39, 127, 0.2)", // 👈 same color, transparent
   },
   infoTextWrapper: {
     flex: 1,
@@ -392,4 +418,50 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: "#222",
   },
+  settingsButton: {
+  flexDirection: "row",
+  alignItems: "center",
+  backgroundColor: "white",
+  paddingVertical: 14,
+  paddingHorizontal: 16,
+  borderRadius: 16,
+  marginTop: 10,
+  shadowColor: "#000",
+  shadowOpacity: 0.05,
+  shadowRadius: 4,
+  shadowOffset: { width: 0, height: 2 },
+  elevation: 2,
+},
+
+settingsText: {
+  fontSize: 16,
+  fontWeight: "600",
+  color: "#222",
+},
+
+editIconWrapper: {
+  width: 40,
+  height: 40,
+  borderRadius: 999,
+  backgroundColor: "rgba(88, 39, 127, 0.15)",
+  alignItems: "center",
+  justifyContent: "center",
+  marginRight: 12,
+},
+
+logoutIconWrapper: {
+  width: 40,
+  height: 40,
+  borderRadius: 999,
+  backgroundColor: "rgba(255, 56, 56, 0.15)",
+  alignItems: "center",
+  justifyContent: "center",
+  marginRight: 12,
+},
+
+arrowIcon: {
+  marginLeft: "auto",
+  opacity: 0.4,
+},
+
 });
