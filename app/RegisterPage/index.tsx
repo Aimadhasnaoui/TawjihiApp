@@ -1,9 +1,10 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Alert, Image, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native"
 import { ProgressStep, ProgressSteps } from "react-native-progress-steps"
-
+import { PutEtudient } from "../../services/User"
+import { useAuth } from "../context/AuthContext"
 // Define colors
 const COLORS = {
   primary: "#b0396b",
@@ -15,86 +16,134 @@ const COLORS = {
   lightGray: "#e0e0e0",
 }
 
-// Types
-interface ContactInfo {
-  adresse_fr: string
-  adresse_ar: string
-  ville: string
-  email: string
-  telephone: string
-}
-
-interface TuteurInfo {
-  type_tuteur: string
-  prenom_pere: string
-  nom_pere: string
-  cin_pere: string
-  prenom_mere: string
-  nom_mere: string
-  cin_mere: string
-}
-
-interface ScolaireInfo {
-  code_massar: string
-  option_bac: string
-  nom_lycee: string
-  type_lycee: string
-}
-
-interface NotesInfo {
-  note_regionale: string
-  moyenne_1ere: string
-  moyenne_2eme: string
-  note_nationale: string
-}
-
 const StudentRegistrationForm = () => {
+  const { user, login } = useAuth();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   // Step 1: Contact Info
-  const [contactInfo, setContactInfo] = useState<ContactInfo>({
-    adresse_fr: "",
-    adresse_ar: "",
-    ville: "",
-    email: "",
-    telephone: "",
+  const [contactInfo, setContactInfo] = useState({
+    adresse_fr: "agadir",
+    adresse_ar: "agadir",
+    ville_residence: "agadir",
+    email: "agadir",
+    email_code: "agadir",
+    tel_eleve: "agadir",
   })
 
   // Step 2: Tuteur Info
-  const [tuteurInfo, setTuteurInfo] = useState<TuteurInfo>({
-    type_tuteur: "",
-    prenom_pere: "",
-    nom_pere: "",
-    cin_pere: "",
-    prenom_mere: "",
-    nom_mere: "",
-    cin_mere: "",
+  const [tuteurInfo, setTuteurInfo] = useState({
+    type_tuteur: "pere",
+    tel_tuteur: "0657966883",
+    prenom_pere_fr: "ali",
+    nom_pere_fr: "ali",
+    prenom_pere_ar: "ali",
+    nom_pere_ar: "ali",
+    cin_pere: "ali",
+    prenom_mere_fr: "ali",
+    nom_mere_fr: "ali",
+    prenom_mere_ar: "ALI",
+    nom_mere_ar: "ALI",
+    cin_mere: "ali",
   })
 
   // Step 3: Scolaire Info
-  const [scolaireInfo, setScolaireInfo] = useState<ScolaireInfo>({
-    code_massar: "",
-    option_bac: "",
-    nom_lycee: "",
-    type_lycee: "",
+  const [scolaireInfo, setScolaireInfo] = useState({
+    massar_id: "d134554",
+    massar_code: "5644",
+    option_bac: "SM",
+    lycee_nom: "FAYSAL",
+    lycee_type: "public",
   })
 
   // Step 4: Notes Info
-  const [notesInfo, setNotesInfo] = useState<NotesInfo>({
-    note_regionale: "",
-    moyenne_1ere: "",
-    moyenne_2eme: "",
-    note_nationale: "",
+  const [notesInfo, setNotesInfo] = useState({
+    note_francais_regional: "20",
+    note_arabe_regional: "20",
+    moyenne_1ere_annee: "20",
+    note_s1_2eme_annee: "20",
   })
 
   // Step 5: Image
-  const [imageUri, setImageUri] = useState<string | null>(null)
+  const [imageUri, setImageUri] = useState(null)
 
   // Tuteur type options
   const tuteurTypes = ["Père", "Mère", "Tuteur légal", "Autre"]
-  const [selectedTuteur, setSelectedTuteur] = useState<string>("")
+  const [selectedTuteur, setSelectedTuteur] = useState("")
 
   // Lycee type options
   const lyceeTypes = ["Public", "Privé"]
-  const [selectedLyceeType, setSelectedLyceeType] = useState<string>("")
+  const [selectedLyceeType, setSelectedLyceeType] = useState("")
+
+  // Show initial warning alert on component mount
+  const [hasSeenWarning, setHasSeenWarning] = useState(false)
+
+  useEffect(() => {
+    Alert.alert(
+      "تنبيه مهم",
+      "يرجى التأكد من صحة جميع المعلومات المدخلة. أي تغيير في البيانات سيتطلب موافقة الإدارة. المعلومات الخاطئة قد تؤثر على فرصك في القبول بالمؤسسة التعليمية.",
+      [
+        {
+          text: "فهمت",
+          onPress: () => setHasSeenWarning(true)
+        }
+      ]
+    )
+  }, [])
+
+  // Validation functions
+  const validateContactInfo = () => {
+    const { adresse_fr, adresse_ar, ville_residence, email, email_code, tel_eleve } = contactInfo
+    
+    if (!adresse_fr || !adresse_ar || !ville_residence || !email || !email_code || !tel_eleve) {
+      Alert.alert("معلومات ناقصة", "يرجى ملء جميع الحقول المطلوبة")
+      return false
+    }
+    
+    // Email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!emailRegex.test(email)) {
+      Alert.alert("بريد إلكتروني غير صحيح", "يرجى إدخال عنوان بريد إلكتروني صحيح")
+      return false
+    }
+    
+    return true
+  }
+
+  const validateTuteurInfo = () => {
+    const { type_tuteur, tel_tuteur, prenom_pere_fr, nom_pere_fr, prenom_pere_ar, nom_pere_ar, cin_pere, 
+            prenom_mere_fr, nom_mere_fr, prenom_mere_ar, nom_mere_ar, cin_mere } = tuteurInfo
+    
+    if (!type_tuteur || !tel_tuteur || !prenom_pere_fr || !nom_pere_fr || 
+        !prenom_pere_ar || !nom_pere_ar || !cin_pere || 
+        !prenom_mere_fr || !nom_mere_fr || !prenom_mere_ar || !nom_mere_ar || !cin_mere) {
+      Alert.alert("معلومات ناقصة", "يرجى ملء جميع الحقول المطلوبة")
+      return false
+    }
+    
+    return true
+  }
+
+  const validateScolaireInfo = () => {
+    const { massar_id, massar_code, option_bac, lycee_nom, lycee_type } = scolaireInfo
+    
+    if (!massar_id || !massar_code || !option_bac || !lycee_nom || !lycee_type) {
+      Alert.alert("معلومات ناقصة", "يرجى ملء جميع الحقول المطلوبة")
+      return false
+    }
+    
+    return true
+  }
+
+  const validateNotesInfo = () => {
+    const { note_francais_regional, note_arabe_regional, moyenne_1ere_annee, note_s1_2eme_annee } = notesInfo
+    
+    if (!note_francais_regional || !note_arabe_regional || !moyenne_1ere_annee || !note_s1_2eme_annee) {
+      Alert.alert("معلومات ناقصة", "يرجى ملء جميع الحقول المطلوبة")
+      return false
+    }
+    
+    return true
+  }
 
   // Handle image pick (placeholder - integrate with expo-image-picker)
   const handlePickImage = () => {
@@ -103,16 +152,42 @@ const StudentRegistrationForm = () => {
   }
 
   // Handle form submission
-  const handleSubmit = () => {
-    const formData = {
-      infos_contact: contactInfo,
-      infos_tuteur: tuteurInfo,
-      infos_scolaires: scolaireInfo,
-      notes: notesInfo,
-      image: imageUri,
+  const handleSubmit = async () => {
+    if (!imageUri) {
+        // Alert.alert("Attention", "Veuillez ajouter une photo de profil.");
+        return;
     }
-    console.log("Form submitted:", formData)
-    Alert.alert("Succès", "Inscription complétée avec succès!")
+
+    setIsSubmitting(true);
+    const id = user?.user?.id;
+    
+    const formData = {
+      ...contactInfo,
+      ...tuteurInfo,
+      ...scolaireInfo,
+      ...notesInfo,
+      image: imageUri,
+      isAllInfo: true
+    }
+
+    try {
+        console.log("Sending data to PutEtudient:", id, formData);
+        const updatedUser = await PutEtudient(formData, id);
+        console.log("Update success:", updatedUser);
+        
+        const newSession = { ...user, user: updatedUser.user || updatedUser };
+        
+        await login(newSession);
+        
+        Alert.alert("Succès", "Inscription complétée avec succès!", [
+            { text: "OK" }
+        ]);
+    } catch (error) {
+        console.error("Submission error:", error);
+        Alert.alert("Erreur", "Une erreur est survenue lors de l'enregistrement. Veuillez réessayer.");
+    } finally {
+        setIsSubmitting(false);
+    }
   }
 
   // Custom input component
@@ -124,14 +199,6 @@ const StudentRegistrationForm = () => {
     keyboardType = "default",
     secureTextEntry = false,
     isArabic = false,
-  }: {
-    label: string
-    value: string
-    onChangeText: (text: string) => void
-    placeholder: string
-    keyboardType?: any
-    secureTextEntry?: boolean
-    isArabic?: boolean
   }) => (
     <View style={styles.inputContainer}>
       <Text style={styles.label}>{label}</Text>
@@ -149,17 +216,7 @@ const StudentRegistrationForm = () => {
   )
 
   // Option selector component
-  const OptionSelector = ({
-    label,
-    options,
-    selected,
-    onSelect,
-  }: {
-    label: string
-    options: string[]
-    selected: string
-    onSelect: (option: string) => void
-  }) => (
+  const OptionSelector = ({ label, options, selected, onSelect }) => (
     <View style={styles.inputContainer}>
       <Text style={styles.label}>{label}</Text>
       <View style={styles.optionsRow}>
@@ -177,7 +234,7 @@ const StudentRegistrationForm = () => {
   )
 
   // Section header component
-  const SectionHeader = ({ title }: { title: string }) => (
+  const SectionHeader = ({ title }) => (
     <View style={styles.sectionHeader}>
       <View style={styles.sectionLine} />
       <Text style={styles.sectionTitle}>{title}</Text>
@@ -211,9 +268,10 @@ const StudentRegistrationForm = () => {
         {/* Step 1: Contact Info */}
         <ProgressStep
           label="Contact"
-              buttonFillColor="#2D2D2D"
-            buttonNextTextColor="#b0396b"
+          buttonFillColor="#2D2D2D"
+          buttonNextTextColor="#b0396b"
           buttonNextText="Suivant"
+          onNext={validateContactInfo}
         >
           <ScrollView style={styles.stepContent}>
             <SectionHeader title="Informations de Contact" />
@@ -234,9 +292,9 @@ const StudentRegistrationForm = () => {
             />
 
             <FormInput
-              label="Ville"
-              value={contactInfo.ville}
-              onChangeText={(text) => setContactInfo({ ...contactInfo, ville: text })}
+              label="Ville de Résidence"
+              value={contactInfo.ville_residence}
+              onChangeText={(text) => setContactInfo({ ...contactInfo, ville_residence: text })}
               placeholder="Entrez votre ville"
             />
 
@@ -249,9 +307,17 @@ const StudentRegistrationForm = () => {
             />
 
             <FormInput
-              label="Téléphone"
-              value={contactInfo.telephone}
-              onChangeText={(text) => setContactInfo({ ...contactInfo, telephone: text })}
+              label="Mot de passe Email"
+              value={contactInfo.email_code}
+              onChangeText={(text) => setContactInfo({ ...contactInfo, email_code: text })}
+              placeholder="Mot de passe"
+              secureTextEntry
+            />
+
+            <FormInput
+              label="Téléphone de l'Élève"
+              value={contactInfo.tel_eleve}
+              onChangeText={(text) => setContactInfo({ ...contactInfo, tel_eleve: text })}
               placeholder="06XXXXXXXX"
               keyboardType="phone-pad"
             />
@@ -261,9 +327,10 @@ const StudentRegistrationForm = () => {
         {/* Step 2: Tuteur Info */}
         <ProgressStep
           label="Tuteur"
-         buttonNextTextColor="#b0396b"
+          buttonNextTextColor="#b0396b"
           buttonNextText="Suivant"
           buttonPreviousText="Retour"
+          onNext={validateTuteurInfo}
         >
           <ScrollView style={styles.stepContent}>
             <SectionHeader title="Informations du Tuteur" />
@@ -278,20 +345,44 @@ const StudentRegistrationForm = () => {
               }}
             />
 
+            <FormInput
+              label="Téléphone du Tuteur"
+              value={tuteurInfo.tel_tuteur}
+              onChangeText={(text) => setTuteurInfo({ ...tuteurInfo, tel_tuteur: text })}
+              placeholder="06XXXXXXXX"
+              keyboardType="phone-pad"
+            />
+
             <SectionHeader title="Informations du Père" />
 
             <FormInput
-              label="Prénom du Père"
-              value={tuteurInfo.prenom_pere}
-              onChangeText={(text) => setTuteurInfo({ ...tuteurInfo, prenom_pere: text })}
+              label="Prénom du Père (Français)"
+              value={tuteurInfo.prenom_pere_fr}
+              onChangeText={(text) => setTuteurInfo({ ...tuteurInfo, prenom_pere_fr: text })}
               placeholder="Prénom"
             />
 
             <FormInput
-              label="Nom du Père"
-              value={tuteurInfo.nom_pere}
-              onChangeText={(text) => setTuteurInfo({ ...tuteurInfo, nom_pere: text })}
+              label="Nom du Père (Français)"
+              value={tuteurInfo.nom_pere_fr}
+              onChangeText={(text) => setTuteurInfo({ ...tuteurInfo, nom_pere_fr: text })}
               placeholder="Nom"
+            />
+
+            <FormInput
+              label="الاسم الشخصي للأب (بالعربية)"
+              value={tuteurInfo.prenom_pere_ar}
+              onChangeText={(text) => setTuteurInfo({ ...tuteurInfo, prenom_pere_ar: text })}
+              placeholder="الاسم الشخصي"
+              isArabic
+            />
+
+            <FormInput
+              label="الاسم العائلي للأب (بالعربية)"
+              value={tuteurInfo.nom_pere_ar}
+              onChangeText={(text) => setTuteurInfo({ ...tuteurInfo, nom_pere_ar: text })}
+              placeholder="الاسم العائلي"
+              isArabic
             />
 
             <FormInput
@@ -304,17 +395,33 @@ const StudentRegistrationForm = () => {
             <SectionHeader title="Informations de la Mère" />
 
             <FormInput
-              label="Prénom de la Mère"
-              value={tuteurInfo.prenom_mere}
-              onChangeText={(text) => setTuteurInfo({ ...tuteurInfo, prenom_mere: text })}
+              label="Prénom de la Mère (Français)"
+              value={tuteurInfo.prenom_mere_fr}
+              onChangeText={(text) => setTuteurInfo({ ...tuteurInfo, prenom_mere_fr: text })}
               placeholder="Prénom"
             />
 
             <FormInput
-              label="Nom de la Mère"
-              value={tuteurInfo.nom_mere}
-              onChangeText={(text) => setTuteurInfo({ ...tuteurInfo, nom_mere: text })}
+              label="Nom de la Mère (Français)"
+              value={tuteurInfo.nom_mere_fr}
+              onChangeText={(text) => setTuteurInfo({ ...tuteurInfo, nom_mere_fr: text })}
               placeholder="Nom"
+            />
+
+            <FormInput
+              label="الاسم الشخصي للأم (بالعربية)"
+              value={tuteurInfo.prenom_mere_ar}
+              onChangeText={(text) => setTuteurInfo({ ...tuteurInfo, prenom_mere_ar: text })}
+              placeholder="الاسم الشخصي"
+              isArabic
+            />
+
+            <FormInput
+              label="الاسم العائلي للأم (بالعربية)"
+              value={tuteurInfo.nom_mere_ar}
+              onChangeText={(text) => setTuteurInfo({ ...tuteurInfo, nom_mere_ar: text })}
+              placeholder="الاسم العائلي"
+              isArabic
             />
 
             <FormInput
@@ -332,15 +439,24 @@ const StudentRegistrationForm = () => {
           buttonNextTextColor="#b0396b"
           buttonNextText="Suivant"
           buttonPreviousText="Retour"
+          onNext={validateScolaireInfo}
         >
           <ScrollView style={styles.stepContent}>
             <SectionHeader title="Informations Scolaires" />
 
             <FormInput
               label="Code Massar"
-              value={scolaireInfo.code_massar}
-              onChangeText={(text) => setScolaireInfo({ ...scolaireInfo, code_massar: text })}
+              value={scolaireInfo.massar_id}
+              onChangeText={(text) => setScolaireInfo({ ...scolaireInfo, massar_id: text })}
               placeholder="Entrez votre code Massar"
+            />
+
+            <FormInput
+              label="Mot de passe Massar"
+              value={scolaireInfo.massar_code}
+              onChangeText={(text) => setScolaireInfo({ ...scolaireInfo, massar_code: text })}
+              placeholder="Mot de passe Massar"
+              secureTextEntry
             />
 
             <FormInput
@@ -352,8 +468,8 @@ const StudentRegistrationForm = () => {
 
             <FormInput
               label="Nom du Lycée"
-              value={scolaireInfo.nom_lycee}
-              onChangeText={(text) => setScolaireInfo({ ...scolaireInfo, nom_lycee: text })}
+              value={scolaireInfo.lycee_nom}
+              onChangeText={(text) => setScolaireInfo({ ...scolaireInfo, lycee_nom: text })}
               placeholder="Nom de votre lycée"
             />
 
@@ -363,7 +479,7 @@ const StudentRegistrationForm = () => {
               selected={selectedLyceeType}
               onSelect={(option) => {
                 setSelectedLyceeType(option)
-                setScolaireInfo({ ...scolaireInfo, type_lycee: option })
+                setScolaireInfo({ ...scolaireInfo, lycee_type: option })
               }}
             />
           </ScrollView>
@@ -372,35 +488,36 @@ const StudentRegistrationForm = () => {
         {/* Step 4: Notes Info */}
         <ProgressStep
           label="Notes"
-         buttonNextTextColor="#b0396b"
+          buttonNextTextColor="#b0396b"
           buttonNextText="Suivant"
           buttonPreviousText="Retour"
+          onNext={validateNotesInfo}
         >
           <ScrollView style={styles.stepContent}>
-            <SectionHeader title="Notes et Moyennes" />
+            <SectionHeader title="Notes Régionales" />
 
             <View style={styles.notesGrid}>
               <View style={styles.noteItem}>
-                <Text style={styles.noteLabel}>Note Régionale</Text>
+                <Text style={styles.noteLabel}>Note Français Régional</Text>
                 <TextInput
                   style={styles.noteInput}
                   placeholder="--/20"
                   placeholderTextColor="#999"
-                  value={notesInfo.note_regionale}
-                  onChangeText={(text) => setNotesInfo({ ...notesInfo, note_regionale: text })}
+                  value={notesInfo.note_francais_regional}
+                  onChangeText={(text) => setNotesInfo({ ...notesInfo, note_francais_regional: text })}
                   keyboardType="decimal-pad"
                   textAlign="center"
                 />
               </View>
 
               <View style={styles.noteItem}>
-                <Text style={styles.noteLabel}>Note Nationale</Text>
+                <Text style={styles.noteLabel}>Note Arabe Régional</Text>
                 <TextInput
                   style={styles.noteInput}
                   placeholder="--/20"
                   placeholderTextColor="#999"
-                  value={notesInfo.note_nationale}
-                  onChangeText={(text) => setNotesInfo({ ...notesInfo, note_nationale: text })}
+                  value={notesInfo.note_arabe_regional}
+                  onChangeText={(text) => setNotesInfo({ ...notesInfo, note_arabe_regional: text })}
                   keyboardType="decimal-pad"
                   textAlign="center"
                 />
@@ -411,26 +528,26 @@ const StudentRegistrationForm = () => {
 
             <View style={styles.notesGrid}>
               <View style={styles.noteItem}>
-                <Text style={styles.noteLabel}>1ère Année Bac</Text>
+                <Text style={styles.noteLabel}>Moyenne 1ère Année</Text>
                 <TextInput
                   style={styles.noteInput}
                   placeholder="--/20"
                   placeholderTextColor="#999"
-                  value={notesInfo.moyenne_1ere}
-                  onChangeText={(text) => setNotesInfo({ ...notesInfo, moyenne_1ere: text })}
+                  value={notesInfo.moyenne_1ere_annee}
+                  onChangeText={(text) => setNotesInfo({ ...notesInfo, moyenne_1ere_annee: text })}
                   keyboardType="decimal-pad"
                   textAlign="center"
                 />
               </View>
 
               <View style={styles.noteItem}>
-                <Text style={styles.noteLabel}>2ème Année Bac</Text>
+                <Text style={styles.noteLabel}>Note S1 2ème Année</Text>
                 <TextInput
                   style={styles.noteInput}
                   placeholder="--/20"
                   placeholderTextColor="#999"
-                  value={notesInfo.moyenne_2eme}
-                  onChangeText={(text) => setNotesInfo({ ...notesInfo, moyenne_2eme: text })}
+                  value={notesInfo.note_s1_2eme_annee}
+                  onChangeText={(text) => setNotesInfo({ ...notesInfo, note_s1_2eme_annee: text })}
                   keyboardType="decimal-pad"
                   textAlign="center"
                 />
@@ -444,10 +561,6 @@ const StudentRegistrationForm = () => {
           label="Photo"
           buttonFinishText="Terminer"
           onSubmit={handleSubmit}
-          // nextBtnStyle={styles.submitButton}
-          // nextBtnTextStyle={styles.buttonText}
-          // previousBtnStyle={styles.prevButton}
-          // previousBtnTextStyle={styles.prevButtonText}
           buttonPreviousText="Retour"
         >
           <ScrollView style={styles.stepContent}>

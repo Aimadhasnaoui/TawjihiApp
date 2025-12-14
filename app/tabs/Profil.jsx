@@ -2,17 +2,17 @@ import {
   AlertTriangle,
   CalendarDays,
   Camera,
+  Edit3,
   IdCard,
   LogOut,
   MapPin,
-  User,
-  Edit3
+  User
 } from "lucide-react-native";
-import {  Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
-import { useAuthStore } from "../Store/authStore";
+import { Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { useAuth } from "../context/AuthContext";
 
 export default function Profil() {
-  const { logout } = useAuthStore();
+  const { logout } = useAuth();
 
   const user = {
     infos_personnelles: {
@@ -178,7 +178,7 @@ export default function Profil() {
   </View>
 </TouchableOpacity>
 
-<TouchableOpacity style={styles.settingsButton}>
+<TouchableOpacity style={styles.settingsButton} onPress={logout}>
   <View style={styles.logoutIconWrapper}>
     <LogOut size={22} color="#DC0000" />
   </View>

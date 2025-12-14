@@ -5,10 +5,9 @@ import {
 } from 'react-native';
 import Logo from '../assets/images/logo.png';
 // NavBar Component
-import { useAuthStore } from '@/app/Store/authStore';
 import { Avatar } from 'react-native-paper';
 export default function NavBar () {
-  const user =  useAuthStore.getState().userAccepted;
+  const user =  '';
 
   return (
     <View    

@@ -1,7 +1,9 @@
 import { ResizeMode, Video } from "expo-av";
 import { Image } from "expo-image";
+import { AlertCircle } from "lucide-react-native";
 import { useRef, useState } from "react";
 import {
+  ActivityIndicator,
   Keyboard,
   KeyboardAvoidingView,
   Pressable,
@@ -10,15 +12,18 @@ import {
   Text,
   TextInput,
   TouchableWithoutFeedback,
-  View,
+  View
 } from "react-native";
 import Logo from "../assets/images/logo.png";
 import { LoginStudent } from "../services/Login";
+import { useAuth } from "./context/AuthContext";
+
 export default function Login() {
   const video = useRef(null);
+  const { login } = useAuth();
 
   const [name, setName] = useState("");
-  const [errors, setErrors] = useState({ name: "", cin: "" });
+  const [errors, setErrors] = useState({ name: "", cin: "", submit: "" });
   const [cin, setCin] = useState("");
   const [isloading, setisloading] = useState(false);
   const [focusedInput, setFocusedInput] = useState(null);
@@ -50,7 +55,7 @@ export default function Login() {
     const nameError = validateName(name);
     const cinError = validateCin(cin);
 
-    setErrors({ name: nameError, cin: cinError });
+    setErrors({ name: nameError, cin: cinError, submit: "" });
 
     if (!nameError && !cinError) {
       const userData = {
@@ -63,12 +68,20 @@ export default function Login() {
         .then((res) => {
           console.log("response");
           console.log(res);
-          LoginUser(res);
+          login(res);
           setisloading(false);
         })
         .catch((err) => {
           console.log(err);
-          console.log("MESSAGE:", err.message);
+          let message = "Une erreur est survenue. Veuillez réessayer.";
+          if (err.message === "Network Error") {
+            message = "Impossible de se connecter au serveur. Vérifiez votre connexion.";
+          } else if (err.response && err.response.data && err.response.data.message) {
+            message = err.response.data.message;
+          } else if (err.response && err.response.status === 404) {
+             message = "Nom ou CIN incorrect.";
+          }
+          setErrors((prev) => ({ ...prev, submit: message }));
           setisloading(false);
         });
 
@@ -132,6 +145,14 @@ export default function Login() {
                 <Text className="text-white text-sm text-center px-4">
                   Entrez vos identifiants pour accéder à votre compte
                 </Text>
+                 {errors.submit ? (
+                <View className="mb-6 mx-4 bg-red-500/90 p-4 rounded-xl flex-row items-center gap-3 border border-red-400">
+                  <AlertCircle color="white" size={24} />
+                  <Text className="text-white text-sm font-medium flex-1">
+                    {errors.submit}
+                  </Text>
+                </View>
+              ) : null}
               </View>
 
               <View className="w-full px-6 mb-6">
@@ -176,7 +197,6 @@ export default function Login() {
                   </Text>
                 ) : null}
               </View>
-
               <Pressable
                 onPress={handleSubmit}
                 className="bg-white w-[80%] px-6 py-3 rounded-xl active:opacity-80"
@@ -186,9 +206,7 @@ export default function Login() {
                     Se connecter
                   </Text>
                 ) : (
-                  <Text className="text-center text-[#b0396b] font-semibold text-base">
-                    ...Loading
-                  </Text>
+                  <ActivityIndicator size="small" color="#b0396b" />
                 )}
               </Pressable>
             </View>

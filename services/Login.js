@@ -3,13 +3,12 @@ import Constants from "expo-constants";
 const { apiBaseUrl } = Constants.expoConfig.extra;
 export const LoginStudent  = async (data) => {
     console.log("data send")
-    console.log(data)
+    console.log(apiBaseUrl)
     try{
-        const response = await  axios.post(`
-https://eduinscrire.online/api/student/login`,data)
-            return response.data;
+        const response = await axios.post(`${apiBaseUrl}/student/login`, data);
+        return response.data;
     }
     catch(error){
-throw error
+        throw error
     }
-}
+} 
