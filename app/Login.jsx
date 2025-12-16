@@ -1,7 +1,7 @@
 import { ResizeMode, Video } from "expo-av";
 import { Image } from "expo-image";
 import { AlertCircle } from "lucide-react-native";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Keyboard,
@@ -12,16 +12,20 @@ import {
   Text,
   TextInput,
   TouchableWithoutFeedback,
-  View
+  View,
 } from "react-native";
 import Logo from "../assets/images/logo.png";
 import { LoginStudent } from "../services/Login";
 import { useAuth } from "./context/AuthContext";
-
+import { GetUser } from "./Store/authStore";
 export default function Login() {
   const video = useRef(null);
   const { login } = useAuth();
+  const useriNFO = GetUser();
 
+  useEffect(() => {
+    console.log(useriNFO);
+  }, [useriNFO]);
   const [name, setName] = useState("");
   const [errors, setErrors] = useState({ name: "", cin: "", submit: "" });
   const [cin, setCin] = useState("");
@@ -75,11 +79,16 @@ export default function Login() {
           console.log(err);
           let message = "Une erreur est survenue. Veuillez réessayer.";
           if (err.message === "Network Error") {
-            message = "Impossible de se connecter au serveur. Vérifiez votre connexion.";
-          } else if (err.response && err.response.data && err.response.data.message) {
+            message =
+              "Impossible de se connecter au serveur. Vérifiez votre connexion.";
+          } else if (
+            err.response &&
+            err.response.data &&
+            err.response.data.message
+          ) {
             message = err.response.data.message;
           } else if (err.response && err.response.status === 404) {
-             message = "Nom ou CIN incorrect.";
+            message = "Nom ou CIN incorrect.";
           }
           setErrors((prev) => ({ ...prev, submit: message }));
           setisloading(false);
@@ -145,14 +154,14 @@ export default function Login() {
                 <Text className="text-white text-sm text-center px-4">
                   Entrez vos identifiants pour accéder à votre compte
                 </Text>
-                 {errors.submit ? (
-                <View className="mb-6 mx-4 bg-red-500/90 p-4 rounded-xl flex-row items-center gap-3 border border-red-400">
-                  <AlertCircle color="white" size={24} />
-                  <Text className="text-white text-sm font-medium flex-1">
-                    {errors.submit}
-                  </Text>
-                </View>
-              ) : null}
+                {errors.submit ? (
+                  <View className="mb-6 mx-4 bg-red-500/90 p-4 rounded-xl flex-row items-center gap-3 border border-red-400">
+                    <AlertCircle color="white" size={24} />
+                    <Text className="text-white text-sm font-medium flex-1">
+                      {errors.submit}
+                    </Text>
+                  </View>
+                ) : null}
               </View>
 
               <View className="w-full px-6 mb-6">

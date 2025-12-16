@@ -1,3 +1,4 @@
+import { useQuery } from "@tanstack/react-query";
 import {
   AlertTriangle,
   CalendarDays,
@@ -6,39 +7,50 @@ import {
   IdCard,
   LogOut,
   MapPin,
-  User
+  User,
+  Mail,
+  Phone,
+  Shield,
+  GraduationCap,
+  School,
+  BookOpen,
+  Users,
+  UserCircle,
+  Award,
 } from "lucide-react-native";
-import { Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { useEffect } from "react";
+import {
+  ActivityIndicator,
+  Image,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import { GetEtudient } from "../../services/User";
 import { useAuth } from "../context/AuthContext";
 
 export default function Profil() {
-  const { logout } = useAuth();
+  const { logout, user: authUser } = useAuth();
 
-  const user = {
-    infos_personnelles: {
-      prenom_fr: "aimad",
-      nom_fr: "hasnaoui",
-      prenom_ar: "هدف",
-      nom_ar: "حسناوي",
-      date_naissance: "2003-02-08T00:00:00.000Z",
-      lieu_naissance: "agadir",
-      cin_eleve: "K235535",
-    },
-    Image: null,
-  };
+  const { data, isPending, error, refetch, isRefetching, isSuccess } = useQuery(
+    {
+      queryKey: ["profil", authUser?.user?.id],
+      queryFn: () => GetEtudient(authUser?.user?.id),
+      enabled: !!authUser?.user?.id,
+    }
+  );
 
-  const fullNameFr =
-    user.infos_personnelles.prenom_fr +
-    " " +
-    user.infos_personnelles.nom_fr;
+  useEffect(() => {
+    if (isSuccess) {
+      console.log(data);
+    }
+  }, [isSuccess, data]);
 
-  const fullNameAr =
-    user.infos_personnelles.prenom_ar +
-    " " +
-    user.infos_personnelles.nom_ar;
-    // ---- Format date in French: 8 février 2003 ----
+  // ---- Format date in French: 8 février 2003 ----
   const formatDateFr = (iso) => {
-    if (!iso) return "";
+    if (!iso) return "Non renseigné";
     const d = new Date(iso);
     const monthsFr = [
       "janvier",
@@ -59,8 +71,82 @@ export default function Profil() {
     const year = d.getFullYear();
     return `${day} ${month} ${year}`;
   };
-  const birthDateLabel = formatDateFr(
-    user.infos_personnelles.date_naissance
+
+  if (error) {
+    return (
+      <View
+        style={{
+          flex: 1,
+          justifyContent: "center",
+          alignItems: "center",
+          padding: 20,
+        }}
+      >
+        <AlertTriangle size={48} color="#DC0000" />
+        <Text style={{ marginTop: 10, color: "#DC0000", textAlign: "center" }}>
+          Erreur lors du chargement du profil.
+        </Text>
+        <TouchableOpacity
+          onPress={() => refetch()}
+          style={{
+            marginTop: 20,
+            padding: 10,
+            backgroundColor: "#b0396b",
+            borderRadius: 8,
+          }}
+        >
+          <Text style={{ color: "white" }}>Réessayer</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
+
+  // Fallback if data is null for some reason
+  const userData = data || {};
+  const infos = userData?.infos_personnelles || {};
+  const contact = userData?.contact || {};
+  const tuteur = userData?.tuteur || {};
+  const scolaire = userData?.scolaire || {};
+  const notes = userData?.notes || {};
+
+  const fullNameFr =
+    infos.prenom_fr && infos.nom_fr
+      ? `${infos.prenom_fr} ${infos.nom_fr}`
+      : "Utilisateur";
+  const fullNameAr =
+    infos.prenom_ar && infos.nom_ar ? `${infos.prenom_ar} ${infos.nom_ar}` : "";
+
+  const birthDateLabel = formatDateFr(infos.date_naissance);
+
+  // Helper to get tuteur type label
+  const getTuteurTypeLabel = (type) => {
+    const types = {
+      pere: "Père",
+      mere: "Mère",
+      autre: "Autre tuteur",
+    };
+    return types[type] || type;
+  };
+
+  // Helper to get lycee type label
+  const getLyceeTypeLabel = (type) => {
+    const types = {
+      public: "Public",
+      prive: "Privé",
+    };
+    return types[type] || type;
+  };
+
+  const InfoRow = ({ icon: Icon, label, value }) => (
+    <View style={styles.infoCard}>
+      <View style={styles.infoIconCircle}>
+        <Icon size={22} color="#b0396b" />
+      </View>
+      <View style={styles.infoTextWrapper}>
+        <Text style={styles.infoLabel}>{label}</Text>
+        <Text style={styles.infoValue}>{value || "Non renseigné"}</Text>
+      </View>
+    </View>
   );
 
   return (
@@ -73,9 +159,9 @@ export default function Profil() {
       {/* AVATAR + CAMERA */}
       <View style={styles.avatarWrapper}>
         <View style={styles.avatarContainer}>
-          {user.Image ? (
+          {userData.Image ? (
             <Image
-              source={{ uri: user.Image }}
+              source={{ uri: userData.Image }}
               style={styles.avatarImage}
             />
           ) : (
@@ -93,123 +179,269 @@ export default function Profil() {
         <Text style={styles.nameFr}>{fullNameFr}</Text>
         <Text style={styles.nameAr}>{fullNameAr}</Text>
       </View>
-      <ScrollView  contentContainerStyle={{ paddingVertical: 16, paddingHorizontal: 8}}>
-                {/* SECTION TITLE */}
-          <Text style={styles.sectionTitle}>
-            INFORMATIONS PERSONNELLES
-          </Text>
- {!user.isAllInfo && (
-            <View style={styles.alertCard}>
-              <View style={styles.alertCardText}>
-                  <View style={styles.alertIconCircle}>
+
+      <ScrollView
+        contentContainerStyle={{
+          paddingVertical: 16,
+          paddingHorizontal: 8,
+          paddingBottom: 100,
+        }}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* ALERT: Profil incomplet */}
+        {!userData.isAllInfo && (
+          <View style={styles.alertCard}>
+            <View style={styles.alertCardText}>
+              <View style={styles.alertIconCircle}>
                 <AlertTriangle size={22} color="#c27803" />
               </View>
-                 <View>
+              <View>
                 <Text style={styles.alertTitle}>Profil incomplet</Text>
               </View>
-              </View>
-                 <View>
-                <Text style={styles.alertSubtitle}>
-                  Veuillez compléter vos informations personnelles pour
-                  finaliser votre inscription.
-                </Text>
-              </View>
-                 <TouchableOpacity style={styles.alertButton}>
-                <Text style={styles.alertButtonText}>
-                  Compléter maintenant
-                </Text>
-              </TouchableOpacity> 
             </View>
-          )}
-          {/* INFO CARDS */}
-          <View style={{ gap: 12 ,padding:4}}>
-            {/* Date de naissance */}
-            <View style={styles.infoCard}>
-              <View style={styles.infoIconCircle}>
-                <CalendarDays size={22} color="#b0396b" />
-              </View>
-              <View style={styles.infoTextWrapper}>
-                <Text style={styles.infoLabel}>Date de naissance</Text>
-                <Text style={styles.infoValue}>{birthDateLabel}</Text>
-              </View>
+            <View>
+              <Text style={styles.alertSubtitle}>
+                Veuillez compléter vos informations personnelles pour finaliser
+                votre inscription.
+              </Text>
             </View>
-
-            {/* Lieu de naissance */}
-            <View style={styles.infoCard}>
-              <View style={styles.infoIconCircle}>
-                <MapPin size={22} color="#b0396b" />
-              </View>
-              <View style={styles.infoTextWrapper}>
-                <Text style={styles.infoLabel}>Lieu de naissance</Text>
-                <Text style={styles.infoValue}>
-                  {user.infos_personnelles.lieu_naissance}
-                </Text>
-              </View>
-            </View>
-
-            {/* CIN */}
-            <View style={styles.infoCard}>
-              <View style={styles.infoIconCircle}>
-                <IdCard size={22} color="#b0396b" />
-              </View>
-              <View style={styles.infoTextWrapper}>
-                <Text style={styles.infoLabel}>CIN</Text>
-                <Text style={styles.infoValue}>
-                  {user.infos_personnelles.cin_eleve}
-                </Text>
-              </View>
-            </View>
-          </View>
-          <Text style={styles.sectionTitle}>
-            Paramètres
-          </Text>
-            <View style={{ gap: 4 ,padding:4}}>
-            {/* Date de naissance */}
-            <TouchableOpacity style={styles.settingsButton}>
-  <View style={styles.editIconWrapper}>
-    <Edit3 size={22} color="#58277f" />
-  </View>
-
-  <Text style={styles.settingsText}>Mettre à jour votre profil</Text>
-
-  {/* Optional arrow → looks clean */}
-  <View style={styles.arrowIcon}>
-    <Edit3 size={20} color="#58277f" />
-  </View>
-</TouchableOpacity>
-
-<TouchableOpacity style={styles.settingsButton} onPress={logout}>
-  <View style={styles.logoutIconWrapper}>
-    <LogOut size={22} color="#DC0000" />
-  </View>
-
-  <Text style={styles.settingsText}>Logout</Text>
-
-  {/* Optional arrow */}
-  <View style={styles.arrowIcon}>
-    <LogOut size={20} color="#DC0000" />
-  </View>
-</TouchableOpacity>
-
-            {/* <TouchableOpacity style={styles.infoCardParametr}>
-              <View style={styles.infoIconCircleEdit}>
-                <Edit3 size={22} color="#b0396b" />
-              </View>
-              <View style={styles.infoTextWrapper}>
-                <Text style={styles.infoValue}>Mettre à jour votre profil</Text>
-              </View>
+            <TouchableOpacity style={styles.alertButton}>
+              <Text style={styles.alertButtonText}>Compléter maintenant</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.infoCardParametr}>
-              <View style={styles.infoIconCircleLougout}>
-                <LogOut  size={22} color="#DC0000" />
-              </View>
-              <View style={styles.infoTextWrapper}>
-                <Text style={styles.infoValue}>Logout</Text>
-              </View>
-            </TouchableOpacity> */}
-
           </View>
-          </ScrollView>
+        )}
+
+        {isPending ? (
+          <View
+            style={{
+              flex: 1,
+              justifyContent: "center",
+              alignItems: "center",
+              padding: 20,
+            }}
+          >
+            <ActivityIndicator size="large" color="#b0396b" />
+            <Text style={{ marginTop: 10, color: "#666" }}>
+              Chargement du profil...
+            </Text>
+          </View>
+        ) : (
+          <>
+            {/* SECTION: INFORMATIONS PERSONNELLES */}
+            <Text style={styles.sectionTitle}>INFORMATIONS PERSONNELLES</Text>
+            <View style={{ gap: 12, padding: 4 }}>
+              <InfoRow
+                icon={CalendarDays}
+                label="Date de naissance"
+                value={birthDateLabel}
+              />
+              <InfoRow
+                icon={MapPin}
+                label="Lieu de naissance"
+                value={infos.lieu_naissance}
+              />
+              <InfoRow icon={IdCard} label="CIN" value={infos.cin_eleve} />
+            </View>
+
+            {/* SECTION: CONTACT */}
+            <Text style={styles.sectionTitle}>CONTACT</Text>
+            <View style={{ gap: 12, padding: 4 }}>
+              <InfoRow
+                icon={MapPin}
+                label="Ville de résidence"
+                value={contact.ville_residence}
+              />
+              <InfoRow
+                icon={MapPin}
+                label="Adresse (Français)"
+                value={contact.adresse_fr}
+              />
+              <InfoRow
+                icon={MapPin}
+                label="العنوان (العربية)"
+                value={contact.adresse_ar}
+              />
+              <InfoRow icon={Mail} label="Email" value={contact.email} />
+              <InfoRow
+                icon={Mail}
+                label="Code Email"
+                value={contact.email_code}
+              />
+              <InfoRow
+                icon={Phone}
+                label="Téléphone élève"
+                value={contact.tel_eleve}
+              />
+            </View>
+
+            {/* SECTION: TUTEUR */}
+            <Text style={styles.sectionTitle}>TUTEUR / PARENTS</Text>
+            <View style={{ gap: 12, padding: 4 }}>
+              <InfoRow
+                icon={Users}
+                label="Type de tuteur"
+                value={getTuteurTypeLabel(tuteur.type_tuteur)}
+              />
+              <InfoRow
+                icon={Phone}
+                label="Téléphone tuteur"
+                value={tuteur.tel_tuteur}
+              />
+
+              {/* Father Info */}
+              <InfoRow
+                icon={UserCircle}
+                label="Nom du père (Français)"
+                value={
+                  tuteur.prenom_pere_fr && tuteur.nom_pere_fr
+                    ? `${tuteur.prenom_pere_fr} ${tuteur.nom_pere_fr}`
+                    : "Non renseigné"
+                }
+              />
+              <InfoRow
+                icon={UserCircle}
+                label="اسم الأب (العربية)"
+                value={
+                  tuteur.prenom_pere_ar && tuteur.nom_pere_ar
+                    ? `${tuteur.prenom_pere_ar} ${tuteur.nom_pere_ar}`
+                    : "Non renseigné"
+                }
+              />
+              <InfoRow
+                icon={IdCard}
+                label="CIN du père"
+                value={tuteur.cin_pere}
+              />
+
+              {/* Mother Info */}
+              <InfoRow
+                icon={UserCircle}
+                label="Nom de la mère (Français)"
+                value={
+                  tuteur.prenom_mere_fr && tuteur.nom_mere_fr
+                    ? `${tuteur.prenom_mere_fr} ${tuteur.nom_mere_fr}`
+                    : "Non renseigné"
+                }
+              />
+              <InfoRow
+                icon={UserCircle}
+                label="اسم الأم (العربية)"
+                value={
+                  tuteur.prenom_mere_ar && tuteur.nom_mere_ar
+                    ? `${tuteur.prenom_mere_ar} ${tuteur.nom_mere_ar}`
+                    : "Non renseigné"
+                }
+              />
+              <InfoRow
+                icon={IdCard}
+                label="CIN de la mère"
+                value={tuteur.cin_mere}
+              />
+            </View>
+
+            {/* SECTION: SCOLAIRE */}
+            <Text style={styles.sectionTitle}>INFORMATIONS SCOLAIRES</Text>
+            <View style={{ gap: 12, padding: 4 }}>
+              <InfoRow
+                icon={Shield}
+                label="Code Massar"
+                value={scolaire.massar_id}
+              />
+              <InfoRow
+                icon={Shield}
+                label="Code Massar (Code)"
+                value={scolaire.massar_code}
+              />
+              <InfoRow
+                icon={GraduationCap}
+                label="Option Bac"
+                value={scolaire.option_bac}
+              />
+              <InfoRow
+                icon={School}
+                label="Nom du lycée"
+                value={scolaire.lycee_nom}
+              />
+              <InfoRow
+                icon={School}
+                label="Type de lycée"
+                value={getLyceeTypeLabel(scolaire.lycee_type)}
+              />
+            </View>
+
+            {/* SECTION: NOTES */}
+            <Text style={styles.sectionTitle}>NOTES & RÉSULTATS</Text>
+            <View style={{ gap: 12, padding: 4 }}>
+              <InfoRow
+                icon={Award}
+                label="Note Français (Régional)"
+                value={
+                  notes.note_francais_regional
+                    ? `${notes.note_francais_regional}/20`
+                    : "Non renseigné"
+                }
+              />
+              <InfoRow
+                icon={Award}
+                label="Note Arabe (Régional)"
+                value={
+                  notes.note_arabe_regional
+                    ? `${notes.note_arabe_regional}/20`
+                    : "Non renseigné"
+                }
+              />
+              <InfoRow
+                icon={BookOpen}
+                label="Moyenne 1ère année"
+                value={
+                  notes.moyenne_1ere_annee
+                    ? `${notes.moyenne_1ere_annee}/20`
+                    : "Non renseigné"
+                }
+              />
+              <InfoRow
+                icon={BookOpen}
+                label="Note S1 2ème année"
+                value={
+                  notes.note_s1_2eme_annee
+                    ? `${notes.note_s1_2eme_annee}/20`
+                    : "Non renseigné"
+                }
+              />
+            </View>
+
+            {/* SECTION: SETTINGS */}
+            <Text style={styles.sectionTitle}>PARAMÈTRES</Text>
+            <View style={{ gap: 4, padding: 4 }}>
+              <TouchableOpacity style={styles.settingsButton}>
+                <View style={styles.editIconWrapper}>
+                  <Edit3 size={22} color="#58277f" />
+                </View>
+
+                <Text style={styles.settingsText}>
+                  Mettre à jour votre profil
+                </Text>
+
+                <View style={styles.arrowIcon}>
+                  <Edit3 size={20} color="#58277f" />
+                </View>
+              </TouchableOpacity>
+
+              <TouchableOpacity style={styles.settingsButton} onPress={logout}>
+                <View style={styles.logoutIconWrapper}>
+                  <LogOut size={22} color="#DC0000" />
+                </View>
+
+                <Text style={styles.settingsText}>Déconnexion</Text>
+
+                <View style={styles.arrowIcon}>
+                  <LogOut size={20} color="#DC0000" />
+                </View>
+              </TouchableOpacity>
+            </View>
+          </>
+        )}
+      </ScrollView>
     </View>
   );
 }
@@ -284,15 +516,9 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: "#333",
   },
-   content: {
-    marginTop: 24,
-    paddingHorizontal: 16,
-    gap: 16,
-  },
 
   // Alert banner
   alertCard: {
-    // flexDirection: "row",
     backgroundColor: "#fff8e6",
     borderRadius: 16,
     padding: 16,
@@ -313,9 +539,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     marginTop: 4,
-  },
-  alertTextWrapper: {
-    flex: 1,
   },
   alertTitle: {
     fontSize: 16,
@@ -348,7 +571,7 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     color: "#8c6a99",
     letterSpacing: 1,
-    marginLeft:6,
+    marginLeft: 6,
   },
 
   // Info cards
@@ -358,20 +581,6 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     padding: 16,
     alignItems: "center",
-    // light shadow
-    shadowColor: "#000",
-    shadowOpacity: 0.05,
-    shadowRadius: 6,
-    shadowOffset: { width: 0, height: 2 },
-    elevation: 2,
-  },
-  infoCardParametr: {
-    flexDirection: "row",
-    backgroundColor: "white",
-    borderRadius: 16,
-    padding: 16,
-    alignItems: "center",
-    // light shadow
     shadowColor: "#000",
     shadowOpacity: 0.05,
     shadowRadius: 6,
@@ -387,24 +596,6 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     marginRight: 12,
   },
-  infoIconCircleLougout: {
-    width: 40,
-    height: 40,
-    borderRadius: 999,
-    alignItems: "center",
-    justifyContent: "center",
-    marginRight: 12,
-    backgroundColor: "rgba(255, 56, 56, 0.2)",
-  },
-  infoIconCircleEdit: {
-    width: 40,
-    height: 40,
-    borderRadius: 999,
-    alignItems: "center",
-    justifyContent: "center",
-    marginRight: 12,
-    backgroundColor: "rgba(88, 39, 127, 0.2)", // 👈 same color, transparent
-  },
   infoTextWrapper: {
     flex: 1,
   },
@@ -419,49 +610,48 @@ const styles = StyleSheet.create({
     color: "#222",
   },
   settingsButton: {
-  flexDirection: "row",
-  alignItems: "center",
-  backgroundColor: "white",
-  paddingVertical: 14,
-  paddingHorizontal: 16,
-  borderRadius: 16,
-  marginTop: 10,
-  shadowColor: "#000",
-  shadowOpacity: 0.05,
-  shadowRadius: 4,
-  shadowOffset: { width: 0, height: 2 },
-  elevation: 2,
-},
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "white",
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    borderRadius: 16,
+    marginTop: 10,
+    shadowColor: "#000",
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 2,
+  },
 
-settingsText: {
-  fontSize: 16,
-  fontWeight: "600",
-  color: "#222",
-},
+  settingsText: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#222",
+  },
 
-editIconWrapper: {
-  width: 40,
-  height: 40,
-  borderRadius: 999,
-  backgroundColor: "rgba(88, 39, 127, 0.15)",
-  alignItems: "center",
-  justifyContent: "center",
-  marginRight: 12,
-},
+  editIconWrapper: {
+    width: 40,
+    height: 40,
+    borderRadius: 999,
+    backgroundColor: "rgba(88, 39, 127, 0.15)",
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: 12,
+  },
 
-logoutIconWrapper: {
-  width: 40,
-  height: 40,
-  borderRadius: 999,
-  backgroundColor: "rgba(255, 56, 56, 0.15)",
-  alignItems: "center",
-  justifyContent: "center",
-  marginRight: 12,
-},
+  logoutIconWrapper: {
+    width: 40,
+    height: 40,
+    borderRadius: 999,
+    backgroundColor: "rgba(255, 56, 56, 0.15)",
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: 12,
+  },
 
-arrowIcon: {
-  marginLeft: "auto",
-  opacity: 0.4,
-},
-
+  arrowIcon: {
+    marginLeft: "auto",
+    opacity: 0.4,
+  },
 });

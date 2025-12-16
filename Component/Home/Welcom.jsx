@@ -1,10 +1,10 @@
 import { User } from "lucide-react-native";
 import { StyleSheet, Text, View } from "react-native";
-
-function Welcom({ userName = "Utilisateur" }) {
+import { useAuth } from "../../app/context/AuthContext";
+function Welcom() {
   const now = new Date();
   const hour = now.getHours();
-
+  const { user } = useAuth();
   let greeting = "Bonjour";
   if (hour >= 18) greeting = "Bonsoir";
   else if (hour < 6) greeting = "Bonne nuit";
@@ -17,7 +17,9 @@ function Welcom({ userName = "Utilisateur" }) {
         </View>
         <View>
           <Text style={styles.greeting}>{greeting}</Text>
-          <Text style={styles.userName}>{userName}</Text>
+          <Text style={styles.userName}>
+            {user?.user?.Prenom + " " + user?.user?.name}
+          </Text>
         </View>
       </View>
       <Text style={styles.welcome}>Bienvenue sur votre tableau de bord</Text>
