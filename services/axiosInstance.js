@@ -1,4 +1,4 @@
-import axios from 'axios';
+import axios from "axios";
 import Constants from "expo-constants";
 import { GetUser } from "../app/Store/authStore";
 // import { getUserFromCookies } from '../Component/utilis/getUserFromCookies';

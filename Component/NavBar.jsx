@@ -1,31 +1,48 @@
-import {
-  Image,
-  Pressable,
-  View
-} from 'react-native';
-import Logo from '../assets/images/logo.png';
-// NavBar Component
-import { Avatar } from 'react-native-paper';
-export default function NavBar () {
-  const user =  '';
+import { useRouter } from "expo-router";
+import { Plus } from "lucide-react-native";
+import { Image, Pressable, View } from "react-native";
+import Logo from "../assets/images/logo.png";
+
+export default function NavBar() {
+  const user = "";
+  const router = useRouter();
+
+  const handleNavigateToChoix = () => {
+    router.push("/tabs/CHOIXstudent");
+  };
 
   return (
-    <View    
-      style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',backgroundColor:'#b0396b'}}
-      className=" px-4 py-3 shadow-lg"
+    <View
+      style={{
+        flexDirection: "row",
+        justifyContent: "space-between",
+        alignItems: "center",
+        backgroundColor: "#b0396b",
+      }}
+      className="px-4 py-3 shadow-lg"
     >
-      <Pressable 
-        // onPress={onMenuPress}
-        className="p-2 active:opacity-70"
-      >
+      <Pressable className="p-2 active:opacity-70">
         <Image
           source={Logo}
           style={{ width: 40, height: 40 }}
           resizeMode="contain"
         />
       </Pressable>
-      
-      <Avatar.Text size={32} label={user ?user.user.Prenom[0].toUpperCase() : 'U'} />
+
+      <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
+        {/* Add Icon Button */}
+        <Pressable
+          onPress={handleNavigateToChoix}
+          className="p-2 active:opacity-70"
+          style={{
+            backgroundColor: "rgba(255, 255, 255, 0.2)",
+            borderRadius: 20,
+            padding: 8,
+          }}
+        >
+          <Plus color="white" size={24} />
+        </Pressable>
+      </View>
     </View>
   );
-};
+}
