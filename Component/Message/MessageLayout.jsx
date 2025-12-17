@@ -38,7 +38,6 @@ const statusConfig = {
 
   const config = statusConfig[Message.Type] ?? statusConfig.message;
   const Icon = config.icon;
-  console.log(config)
 const date = new Date(Message.createdAt);
 const monthsFr = [
   "Janvier", "Février", "Mars", "Avril", "Mai", "Juin",

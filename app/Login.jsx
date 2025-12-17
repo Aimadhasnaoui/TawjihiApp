@@ -22,10 +22,6 @@ export default function Login() {
   const video = useRef(null);
   const { login } = useAuth();
   const useriNFO = GetUser();
-
-  useEffect(() => {
-    console.log(useriNFO);
-  }, [useriNFO]);
   const [name, setName] = useState("");
   const [errors, setErrors] = useState({ name: "", cin: "", submit: "" });
   const [cin, setCin] = useState("");
@@ -70,13 +66,10 @@ export default function Login() {
       setisloading(true);
       LoginStudent(userData)
         .then((res) => {
-          console.log("response");
-          console.log(res);
           login(res);
           setisloading(false);
         })
         .catch((err) => {
-          console.log(err);
           let message = "Une erreur est survenue. Veuillez réessayer.";
           if (err.message === "Network Error") {
             message =

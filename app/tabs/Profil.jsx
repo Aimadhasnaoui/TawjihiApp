@@ -42,11 +42,6 @@ export default function Profil() {
     }
   );
 
-  useEffect(() => {
-    if (isSuccess) {
-      console.log(data);
-    }
-  }, [isSuccess, data]);
 
   // ---- Format date in French: 8 février 2003 ----
   const formatDateFr = (iso) => {

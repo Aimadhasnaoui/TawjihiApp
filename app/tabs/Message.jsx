@@ -15,11 +15,6 @@ const {data,isLoading,error,refetch,isRefetching} = useQuery({
     queryKey:["Message"],
     queryFn:GetMessage
 })
-  useEffect(() => {
-if(!isLoading){
-  console.log(data)
-}
-  }, [isLoading]);
     return (
     <View className="flex-1">
       {/* Header */}
