@@ -3,6 +3,7 @@ import { useState } from "react";
 import {
   ActivityIndicator,
   Pressable,
+  RefreshControl,
   ScrollView,
   StyleSheet,
   Text,
@@ -26,6 +27,7 @@ export default function Suivi() {
     isLoading,
     isError,
     error,
+    isRefetching,
     refetch,
   } = useQuery({
     queryKey: ["etudiantChoix", user?.user?.id],
@@ -42,7 +44,16 @@ export default function Suivi() {
     return data.filter((item) => item.statut_ecole === status).length;
   };
   return (
-    <ScrollView>
+    <ScrollView
+      refreshControl={
+        <RefreshControl
+          refreshing={isRefetching}
+          onRefresh={refetch}
+          tintColor="#b0396b"
+          colors={["#b0396b"]}
+        />
+      }
+    >
       <View
         className="bg-[#b0396b] pt-2 pb-6 px-6 shadow-lg"
         style={styles.Gardient}
@@ -104,9 +115,9 @@ export default function Suivi() {
               {/* School Info */}
               <View style={styles.cardHeader}>
                 <Text style={styles.schoolName}>{item.ecole.nameFr}</Text>
-                <View style={styles.orderBadge}>
+                {/* <View style={styles.orderBadge}>
                   <Text style={styles.orderText}>Choix {item.ordre_ecole}</Text>
-                </View>
+                </View> */}
               </View>
 
               <Text style={styles.schoolNameAr}>{item.ecole.nameAr}</Text>
@@ -149,19 +160,6 @@ export default function Suivi() {
                   )}
                 </Text>
               </View>
-
-              {/* Status Badge
-              <View
-                style={[
-                  styles.statusBadge,
-                  styles[`status_${item.statut_ecole}`],
-                ]}
-              >
-                <Text style={styles.statusText}>
-                  {TABS.find((t) => t.key === item.statut_ecole)?.label ||
-                    item.statut_ecole}
-                </Text>
-              </View> */}
             </View>
           ))
         )}

@@ -24,3 +24,20 @@ export const PushChoixEtudient = async (choix) => {
     throw error;
   }
 };
+export const PutChoixEtudient = async (choix, id) => {
+  try {
+    const response = await axiosInstance.put(`/Choix/Etudient/${id}`, choix);
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
+export const DeleteChoixEtudient = async (id) => {
+  try {
+    const response = await axiosInstance.delete(`/Choix/Etudient/${id}`);
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};

@@ -9,27 +9,38 @@ import {
 import { useState } from "react";
 import {
   ActivityIndicator,
+  Alert,
   Modal,
   Pressable,
+  RefreshControl,
   ScrollView,
   StyleSheet,
   Text,
   View,
 } from "react-native";
 import {
+  DeleteChoixEtudient,
   GetEcoles,
   GetEcolesFillier,
   PushChoixEtudient,
 } from "../../services/Ecole";
+import { GetEtudientChoix } from "../../services/User";
 import { useAuth } from "../context/AuthContext";
 export default function CHOIXstudent() {
   const [selectedSchools, setSelectedSchools] = useState([]);
   const [modalVisible, setModalVisible] = useState(false);
   const [currentSchool, setCurrentSchool] = useState(null);
   const [selectedFilieres, setSelectedFilieres] = useState([]);
+  const [modifyModalVisible, setModifyModalVisible] = useState(false);
+  const [choiceToModify, setChoiceToModify] = useState(null);
   const { user } = useAuth();
   // Fetch all schools
-  const { data: schools = [], isLoading: loadingSchools } = useQuery({
+  const {
+    data: schools = [],
+    isLoading: loadingSchools,
+    refetch,
+    isRefetching,
+  } = useQuery({
     queryKey: ["ecoles"],
     queryFn: GetEcoles,
   });
@@ -41,8 +52,103 @@ export default function CHOIXstudent() {
     enabled: !!currentSchool,
   });
 
+  const {
+    data: studentchoix = [],
+    isLoading: loadingStudentChoix,
+    isError: isErrorStudentChoix,
+    error: errorStudentChoix,
+    refetch: refetchStudentChoix,
+  } = useQuery({
+    queryKey: ["etudiantChoix", user?.user?.id],
+    queryFn: () => GetEtudientChoix(user?.user?.id),
+  });
+
   const handleSchoolPress = (school) => {
-    // Check if school is already selected
+    // Deadline check
+    const today = new Date().toISOString().split("T")[0];
+    if (today >= school.dateFinInscreption) {
+      Alert.alert(
+        "Trop tard",
+        "Il est trop tard pour modifier les choix de cette école : la date limite est dépassée."
+      );
+      return;
+    }
+
+    // Check if school is already selected in database
+    const alreadyChosen = getStudentChoiceForSchool(school._id);
+    if (alreadyChosen?.statut_ecole !== "choisi") {
+      Alert.alert(
+        "Trop tard",
+        "Il est trop tard pour modifier les choix de cette école : vous êtes déjà inscrit."
+      );
+      return;
+    }
+
+    if (alreadyChosen && alreadyChosen.filieres?.length === school.Nobrechoix) {
+      Alert.alert(
+        "Maximum atteint",
+        `Vous avez déjà choisi le maximum de filières (${school.Nobrechoix}) pour cette école.`,
+        [
+          { text: "Annuler", style: "cancel" },
+          {
+            text: "Supprimer ce choix",
+            style: "destructive",
+            onPress: () => {
+              Alert.alert(
+                "Confirmation",
+                "Êtes-vous sûr de vouloir supprimer tous les choix pour cette école ?",
+                [
+                  { text: "Non", style: "cancel" },
+                  {
+                    text: "Oui",
+                    onPress: () => handleDeleteChoice(alreadyChosen._id),
+                  },
+                ]
+              );
+            },
+          },
+          {
+            text: "Modifier",
+            onPress: () => {
+              setChoiceToModify(alreadyChosen);
+              setModifyModalVisible(true);
+            },
+          },
+        ]
+      );
+      return;
+    }
+    if (alreadyChosen) {
+      Alert.alert("Choix existant", `Vous avez déjà choisi cette école.`, [
+        {
+          text: "Modifier",
+          onPress: () => {
+            setChoiceToModify(alreadyChosen);
+            setModifyModalVisible(true);
+          },
+        },
+        {
+          text: "Supprimer ce choix",
+          style: "destructive",
+          onPress: () => {
+            Alert.alert(
+              "Confirmation",
+              "Êtes-vous sûr de vouloir supprimer tous les choix pour cette école ?",
+              [
+                { text: "Non", style: "cancel" },
+                {
+                  text: "Oui",
+                  onPress: () => handleDeleteChoice(alreadyChosen._id),
+                },
+              ]
+            );
+          },
+        },
+        { text: "Annuler", style: "cancel" },
+      ]);
+      return;
+    }
+    // Check if school is already selected in local state
     const existingSchool = selectedSchools.find(
       (s) => s.ecole._id === school._id
     );
@@ -58,6 +164,19 @@ export default function CHOIXstudent() {
       setSelectedFilieres([]);
       setModalVisible(true);
     }
+  };
+
+  const handleDeleteChoice = (choiceId) => {
+    DeleteChoixEtudient(choiceId)
+      .then(() => {
+        Alert.alert("Succès", "Choix supprimé avec succès");
+        refetchStudentChoix();
+        refetch(); // Refetch schools to update Nobrechoix display if needed
+      })
+      .catch((error) => {
+        console.error("Delete error:", error);
+        Alert.alert("Erreur", "Erreur lors de la suppression");
+      });
   };
 
   const handleFiliereToggle = (filiere) => {
@@ -82,7 +201,7 @@ export default function CHOIXstudent() {
 
   const handleSaveChoice = () => {
     if (selectedFilieres.length === 0) {
-      alert("Veuillez sélectionner au moins une filière");
+      Alert.alert("Attention", "Veuillez sélectionner au moins une filière");
       return;
     }
 
@@ -137,8 +256,16 @@ export default function CHOIXstudent() {
     console.log("Choix à envoyer:", choixData.filieres);
     PushChoixEtudient(choixData)
       .then((res) => {
-        console.log(res);
-        alert("Choix enregistré avec succès");
+        Alert.alert("Succès", "Choix enregistré avec succès", [
+          {
+            text: "d'accord",
+            onPress: () => {
+              setSelectedSchools([]);
+              refetchStudentChoix();
+              refetch();
+            },
+          },
+        ]);
       })
       .catch((error) => {
         console.log("Full Error:", error);
@@ -146,13 +273,16 @@ export default function CHOIXstudent() {
         const backendMessage =
           error.response?.data?.message ||
           "Erreur lors de l'enregistrement des choix";
-        alert(backendMessage);
+        Alert.alert("Erreur", backendMessage);
       });
     // TODO: Call API to save choices
   };
 
   const isSchoolSelected = (schoolId) => {
     return selectedSchools.some((s) => s.ecole._id === schoolId);
+  };
+  const getStudentChoiceForSchool = (schoolId) => {
+    return studentchoix?.find((s) => s.ecole?._id === schoolId);
   };
 
   if (loadingSchools) {
@@ -176,7 +306,17 @@ export default function CHOIXstudent() {
         </Text>
       </View>
 
-      <ScrollView style={styles.content}>
+      <ScrollView
+        style={styles.content}
+        refreshControl={
+          <RefreshControl
+            refreshing={isRefetching}
+            onRefresh={refetch}
+            tintColor="#b0396b"
+            colors={["#b0396b"]}
+          />
+        }
+      >
         {/* Selected Schools Summary */}
         {selectedSchools.length > 0 && (
           <View style={styles.summarySection}>
@@ -225,42 +365,58 @@ export default function CHOIXstudent() {
 
         {/* Available Schools */}
         <Text style={styles.sectionTitle}>Établissements disponibles</Text>
-        {schools.map((school) => (
-          <Pressable
-            key={school._id}
-            style={[
-              styles.schoolCard,
-              isSchoolSelected(school._id) && styles.schoolCardSelected,
-            ]}
-            onPress={() => handleSchoolPress(school)}
-          >
-            <View style={styles.schoolCardHeader}>
-              <GraduationCap
-                color={isSchoolSelected(school._id) ? "#b0396b" : "#666"}
-                size={24}
-              />
-              <View style={{ flex: 1, marginLeft: 12 }}>
-                <Text style={styles.schoolName}>{school.nameFr}</Text>
-                <Text style={styles.schoolNameAr}>{school.nameAr}</Text>
+        {schools.map((school) => {
+          const alreadyChosen = getStudentChoiceForSchool(school._id);
+          return (
+            <Pressable
+              key={school._id}
+              style={[
+                styles.schoolCard,
+                isSchoolSelected(school._id) && styles.schoolCardSelected,
+                alreadyChosen && styles.schoolCardSelectedAlready,
+              ]}
+              onPress={() => handleSchoolPress(school)}
+            >
+              <View style={styles.schoolCardHeader}>
+                <GraduationCap
+                  color={isSchoolSelected(school._id) ? "#b0396b" : "#666"}
+                  size={24}
+                />
+                <View style={{ flex: 1, marginLeft: 12 }}>
+                  <Text style={styles.schoolName}>{school.nameFr}</Text>
+                  <Text style={styles.schoolNameAr}>{school.nameAr}</Text>
+                </View>
+                {isSchoolSelected(school._id) && (
+                  <View style={styles.checkBadge}>
+                    <Check color="#fff" size={16} />
+                  </View>
+                )}
               </View>
-              {isSchoolSelected(school._id) && (
-                <View style={styles.checkBadge}>
-                  <Check color="#fff" size={16} />
+              <View style={styles.schoolInfo}>
+                <MapPin color="#888" size={14} />
+                <Text style={styles.schoolAddress}>{school.adresseFr}</Text>
+              </View>
+              {alreadyChosen ? (
+                <View className="flex-row items-center gap-4">
+                  <View style={styles.checkBadgealready}>
+                    <Check color="#fff" size={16} />
+                  </View>
+                  <Text style={styles.infoText}>
+                    vous avez deja choisi {alreadyChosen.filieres?.length || 0}{" "}
+                    choix sur {school.Nobrechoix}
+                  </Text>
+                </View>
+              ) : (
+                <View style={styles.schoolFooter}>
+                  <Text style={styles.infoText}>
+                    📚 {school.Nobrechoix} choix disponibles
+                  </Text>
+                  <ChevronRight color="#b0396b" size={20} />
                 </View>
               )}
-            </View>
-            <View style={styles.schoolInfo}>
-              <MapPin color="#888" size={14} />
-              <Text style={styles.schoolAddress}>{school.adresseFr}</Text>
-            </View>
-            <View style={styles.schoolFooter}>
-              <Text style={styles.infoText}>
-                📚 {school.Nobrechoix} choix disponibles
-              </Text>
-              <ChevronRight color="#b0396b" size={20} />
-            </View>
-          </Pressable>
-        ))}
+            </Pressable>
+          );
+        })}
       </ScrollView>
 
       {/* Filiere Selection Modal */}
@@ -336,6 +492,63 @@ export default function CHOIXstudent() {
           </View>
         </View>
       </Modal>
+
+      {/* Modify Modal */}
+      <Modal
+        visible={modifyModalVisible}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={() => setModifyModalVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <View>
+                <Text style={styles.modalTitle}>Modifier les choix</Text>
+                <Text style={styles.modalSubtitle}>
+                  {choiceToModify?.ecole?.nameFr}
+                </Text>
+              </View>
+              <Pressable onPress={() => setModifyModalVisible(false)}>
+                <X color="#666" size={24} />
+              </Pressable>
+            </View>
+
+            <ScrollView style={styles.modalScroll}>
+              <Text style={styles.infoText} className="mb-4">
+                Filières sélectionnées :
+              </Text>
+              {choiceToModify?.filieres?.map((f, index) => (
+                <View key={f._id} style={styles.filiereOption}>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.filiereName}>
+                      {index + 1}. {f.fillier?.nameFR}
+                    </Text>
+                    <Text style={styles.filiereNameAr}>
+                      {f.fillier?.nameAr}
+                    </Text>
+                  </View>
+                </View>
+              ))}
+              <Text
+                style={styles.infoText}
+                className="mt-4 text-center text-red-500"
+              >
+                Pour modifier, supprimez le choix et recommencez la sélection.
+              </Text>
+            </ScrollView>
+
+            <View style={styles.modalFooter}>
+              <Pressable
+                style={[styles.saveButton, { backgroundColor: "#666" }]}
+                onPress={() => setModifyModalVisible(false)}
+              >
+                <Text style={styles.saveButtonText}>Fermer</Text>
+              </Pressable>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -367,7 +580,7 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: "700",
     color: "#333",
-    marginBottom: 12,
+    marginBottom: 15,
     marginTop: 8,
   },
   summarySection: {
@@ -462,6 +675,11 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: "#b0396b",
   },
+  schoolCardSelectedAlready: {
+    borderWidth: 2,
+    borderColor: "#73AF6F",
+    backgroundColor: "#EBF4DD",
+  },
   schoolCardHeader: {
     flexDirection: "row",
     alignItems: "center",
@@ -479,6 +697,14 @@ const styles = StyleSheet.create({
   },
   checkBadge: {
     backgroundColor: "#b0396b",
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  checkBadgealready: {
+    backgroundColor: "#31694E",
     width: 24,
     height: 24,
     borderRadius: 12,
@@ -596,6 +822,7 @@ const styles = StyleSheet.create({
     padding: 16,
     borderRadius: 12,
     gap: 8,
+    marginBottom: 16,
   },
   saveButtonText: {
     color: "#fff",
